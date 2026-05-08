@@ -1,0 +1,26 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# Node
+node_modules/
+dist/
+.vite/
+*.log
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Phoenix runtime
+phoenix-config.toml
+phoenix.log
+phoenix-data/
+*.recovery
