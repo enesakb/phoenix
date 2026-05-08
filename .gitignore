@@ -9,6 +9,10 @@ dist/
 .vite/
 *.log
 
+# Emitted JS from TS (tsc no-emit, but belt-and-suspenders)
+src-ui/src/**/*.js
+src-ui/src/**/*.js.map
+
 # Tauri
 src-tauri/target/
 src-tauri/gen/
