@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Phoenix",
+  "version": "0.1.0",
+  "identifier": "com.phoenix.recovery",
+  "build": {
+    "frontendDist": "../src-ui/dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm --prefix ../src-ui run dev",
+    "beforeBuildCommand": "npm --prefix ../src-ui run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Phoenix",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico"]
+  }
+}

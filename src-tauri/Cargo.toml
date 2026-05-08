@@ -1,0 +1,25 @@
+[workspace]
+# Standalone — Tauri's build deps are intentionally outside the main
+# `cargo test --workspace` matrix so library tests stay fast in CI.
+
+[package]
+name = "phoenix-tauri"
+version = "0.1.0"
+edition = "2021"
+authors = ["Phoenix Maintainer <noreply@phoenix.local>"]
+license = "MIT"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+phoenix-core = { path = "../crates/phoenix-core" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
+default = ["custom-protocol"]
