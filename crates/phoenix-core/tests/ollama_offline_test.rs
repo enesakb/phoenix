@@ -1,5 +1,5 @@
-use phoenix_core::llm::OllamaClient;
 use phoenix_core::llm::LlmClient;
+use phoenix_core::llm::OllamaClient;
 use serde_json::json;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};

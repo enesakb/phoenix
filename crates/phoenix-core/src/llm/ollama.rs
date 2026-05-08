@@ -55,10 +55,8 @@ impl LlmClient for OllamaClient {
             anyhow::bail!("ollama returned status {}", resp.status());
         }
 
-        let parsed: GenerateResponse = resp
-            .json()
-            .await
-            .context("decoding Ollama JSON response")?;
+        let parsed: GenerateResponse =
+            resp.json().await.context("decoding Ollama JSON response")?;
 
         Ok(parsed.response)
     }
