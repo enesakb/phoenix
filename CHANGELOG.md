@@ -7,11 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] – 2026-05-09 — `week-7-solana`
+
 ### Added
+- `crypto::solana` module — ed25519 + SLIP-10 derivation across the three canonical Solana wallet paths (Phantom/Backpack/Trust at `m/44'/501'/0'/0'`, Solflare at `m/44'/501'/0'`, Sollet legacy at `m/501'/0'/0'/0'`)
+- `AddressKind::Solana` variant in the reconstruction pipeline; `match_seed_to_target` helper unifies BTC/ETH/Solana matching
+- `phoenix solana-show` CLI subcommand prints the three candidate addresses for any mnemonic so users can compare against their installed wallet
+- `tools/verify/solana-cross-check.js` — independent Node.js cross-verification using the exact libraries Phantom ships with (bip39 + ed25519-hd-key + tweetnacl + bs58)
+- Locked-vector regression test (`solana_test::locked_vectors_match_phantom_libs`) asserting the exact addresses produced by the BIP-39 zero vector
 - Public landing page with conversion-optimized layout (`site/index.html`)
 - Internal status dashboard (`site/status.html`)
 - Launch playbook (`site/launch/`) covering Reddit, Twitter, Hacker News post drafts and Cloudflare Pages deployment guide
 - Professional repository boilerplate: `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue/PR templates, Dependabot config
+
+### Verified
+- Solana derivation matches the Phantom JavaScript pipeline byte-identical across all three paths for the BIP-39 zero vector. Cross-verified 2026-05-09.
+
+### Test count
+- **78 tests** total: 69 Rust workspace (51 prior + 9 Solana + 9 extended) + 2 Tauri + 7 Vitest. All green.
 
 ## [0.6.0] – 2026-05-09 — `week-4-6-extended`
 
