@@ -1,5 +1,10 @@
 use clap::{Parser, Subcommand, ValueEnum};
-use phoenix_core::crypto::{address::AddressKind, reconstruct::reconstruct_missing_word};
+use phoenix_core::crypto::{
+    address::AddressKind,
+    mnemonic::mnemonic_to_seed,
+    reconstruct::reconstruct_missing_word,
+    solana::{all_addresses, derive_solana_signing_key, solana_address, ALL_PATHS},
+};
 use phoenix_core::llm::{LlmClient, OllamaClient};
 
 #[derive(Parser)]
@@ -26,7 +31,7 @@ enum Command {
         /// 12 space-separated tokens; the unknown position is `?`.
         #[arg(long)]
         template: String,
-        /// Target address (BTC bech32 or ETH 0x...).
+        /// Target address (BTC bech32, ETH 0x..., or Solana base58).
         #[arg(long)]
         target: String,
         /// Address kind to derive.
@@ -35,9 +40,20 @@ enum Command {
         /// Optional BIP-39 passphrase.
         #[arg(long, default_value = "")]
         passphrase: String,
-        /// Number of address indexes to scan per candidate.
+        /// Number of address indexes to scan per candidate (BTC/ETH only;
+        /// ignored for Solana which iterates wallet derivation paths).
         #[arg(long, default_value_t = 5)]
         index_range: u32,
+    },
+    /// Print all Solana addresses Phoenix derives for a given mnemonic so you
+    /// can compare against your wallet (Phantom, Solflare, Backpack, etc.).
+    SolanaShow {
+        /// 12-word mnemonic.
+        #[arg(long)]
+        mnemonic: String,
+        /// Optional BIP-39 passphrase.
+        #[arg(long, default_value = "")]
+        passphrase: String,
     },
 }
 
@@ -45,6 +61,7 @@ enum Command {
 enum AddressKindArg {
     Eth,
     Btc,
+    Sol,
 }
 
 impl From<AddressKindArg> for AddressKind {
@@ -52,6 +69,7 @@ impl From<AddressKindArg> for AddressKind {
         match v {
             AddressKindArg::Eth => AddressKind::Eth,
             AddressKindArg::Btc => AddressKind::BtcSegwit,
+            AddressKindArg::Sol => AddressKind::Solana,
         }
     }
 }
@@ -84,7 +102,7 @@ async fn main() -> anyhow::Result<()> {
             match result {
                 Ok(r) => {
                     println!("✓ Recovered word: {}", r.recovered_word);
-                    println!("  Address index : {}", r.address_index);
+                    println!("  Path / index  : {}", r.address_index);
                     println!("  Mnemonic      : {}", r.recovered_mnemonic);
                     println!("  Elapsed       : {:.2?}", elapsed);
                 }
@@ -93,6 +111,33 @@ async fn main() -> anyhow::Result<()> {
                     std::process::exit(1);
                 }
             }
+        }
+        Command::SolanaShow {
+            mnemonic,
+            passphrase,
+        } => {
+            let seed = mnemonic_to_seed(&mnemonic, &passphrase)?;
+            println!("Solana addresses derived from this mnemonic:");
+            for (i, path) in ALL_PATHS.iter().enumerate() {
+                let key = derive_solana_signing_key(&seed, path);
+                let addr = solana_address(&key);
+                let path_str = path
+                    .iter()
+                    .map(|p| format!("{p}'"))
+                    .collect::<Vec<_>>()
+                    .join("/");
+                let label = match i {
+                    0 => "Phantom / Backpack / Trust",
+                    1 => "Solflare",
+                    2 => "Sollet (legacy)",
+                    _ => "?",
+                };
+                println!("  [{i}] {label:<27} m/{path_str}");
+                println!("      {addr}");
+            }
+            // Also show the bare all_addresses pairs to verify the public
+            // helper agrees.
+            let _ = all_addresses(&seed);
         }
     }
     Ok(())

@@ -8,6 +8,9 @@ use tiny_keccak::{Hasher, Keccak};
 pub enum AddressKind {
     BtcSegwit,
     Eth,
+    /// Solana — tries all three wallet derivation paths and matches if ANY
+    /// of them produces the target address. See `crypto::solana` for details.
+    Solana,
 }
 
 /// SHA256 then RIPEMD160 — the classic hash160.

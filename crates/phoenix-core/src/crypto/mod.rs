@@ -10,6 +10,7 @@ pub mod derive;
 pub mod hashcat;
 pub mod mnemonic;
 pub mod reconstruct;
+pub mod solana;
 
 pub use address::{btc_p2wpkh_address, eth_address, AddressKind};
 pub use derive::{derive_btc_segwit_key, derive_eth_key, DerivationError};

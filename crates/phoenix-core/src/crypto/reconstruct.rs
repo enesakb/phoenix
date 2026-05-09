@@ -4,7 +4,41 @@ use thiserror::Error;
 use super::address::{btc_p2wpkh_address, eth_address, AddressKind};
 use super::derive::{derive_btc_segwit_key, derive_eth_key};
 use super::mnemonic::{is_valid_mnemonic, mnemonic_to_seed};
+use super::solana;
 use crate::forensic::bip39_wordlist;
+
+/// Try to derive an address matching `target` from `seed`. Returns the
+/// matching address index (BTC/ETH) or 0 (Solana, since Solana iterates
+/// derivation paths instead of indexes).
+fn match_seed_to_target(
+    seed: &[u8; 64],
+    target: &str,
+    kind: AddressKind,
+    address_index_range: u32,
+) -> Option<u32> {
+    match kind {
+        AddressKind::BtcSegwit => (0..address_index_range).find(|&i| {
+            derive_btc_segwit_key(seed, i)
+                .ok()
+                .map(|(_, pk)| btc_p2wpkh_address(&pk).to_lowercase() == target)
+                .unwrap_or(false)
+        }),
+        AddressKind::Eth => (0..address_index_range).find(|&i| {
+            derive_eth_key(seed, i)
+                .ok()
+                .map(|(_, pk)| eth_address(&pk).to_lowercase() == target)
+                .unwrap_or(false)
+        }),
+        AddressKind::Solana => solana::ALL_PATHS
+            .iter()
+            .enumerate()
+            .find(|(_, path)| {
+                let key = solana::derive_solana_signing_key(seed, path);
+                solana::solana_address(&key) == target
+            })
+            .map(|(i, _)| i as u32),
+    }
+}
 
 #[derive(Debug, Error)]
 pub enum ReconstructError {
@@ -59,7 +93,12 @@ pub fn reconstruct_missing_word(
         return Err(ReconstructError::BadPosition(missing_pos));
     }
 
-    let target = target_address.trim().to_lowercase();
+    // Solana addresses are case-sensitive base58; BTC bech32 + ETH 0x are case-insensitive.
+    let target = if matches!(kind, AddressKind::Solana) {
+        target_address.trim().to_string()
+    } else {
+        target_address.trim().to_lowercase()
+    };
     let words = bip39_wordlist();
 
     let hit = words.par_iter().find_map_any(|candidate| {
@@ -70,25 +109,11 @@ pub fn reconstruct_missing_word(
             return None;
         }
         let seed = mnemonic_to_seed(&mnemonic_text, passphrase).ok()?;
-        for i in 0..address_index_range {
-            let derived = match kind {
-                AddressKind::BtcSegwit => derive_btc_segwit_key(&seed, i).ok(),
-                AddressKind::Eth => derive_eth_key(&seed, i).ok(),
-            };
-            let Some((_, pk)) = derived else { continue };
-            let derived_addr = match kind {
-                AddressKind::BtcSegwit => btc_p2wpkh_address(&pk),
-                AddressKind::Eth => eth_address(&pk),
-            };
-            if derived_addr.to_lowercase() == target {
-                return Some(ReconstructResult {
-                    recovered_word: (*candidate).to_string(),
-                    recovered_mnemonic: mnemonic_text.clone(),
-                    address_index: i,
-                });
-            }
-        }
-        None
+        match_seed_to_target(&seed, &target, kind, address_index_range).map(|i| ReconstructResult {
+            recovered_word: (*candidate).to_string(),
+            recovered_mnemonic: mnemonic_text.clone(),
+            address_index: i,
+        })
     });
 
     hit.ok_or(ReconstructError::NoMatch)
@@ -130,7 +155,11 @@ pub fn reconstruct_multi(
             })
         }
         2 => {
-            let target = target_address.trim().to_lowercase();
+            let target = if matches!(kind, AddressKind::Solana) {
+                target_address.trim().to_string()
+            } else {
+                target_address.trim().to_lowercase()
+            };
             let words = bip39_wordlist();
             let pos_a = missing[0];
             let pos_b = missing[1];
@@ -147,23 +176,13 @@ pub fn reconstruct_multi(
                     let Ok(seed) = mnemonic_to_seed(&mnemonic_text, passphrase) else {
                         continue;
                     };
-                    for i in 0..address_index_range {
-                        let derived = match kind {
-                            AddressKind::BtcSegwit => derive_btc_segwit_key(&seed, i).ok(),
-                            AddressKind::Eth => derive_eth_key(&seed, i).ok(),
-                        };
-                        let Some((_, pk)) = derived else { continue };
-                        let addr = match kind {
-                            AddressKind::BtcSegwit => btc_p2wpkh_address(&pk),
-                            AddressKind::Eth => eth_address(&pk),
-                        };
-                        if addr.to_lowercase() == target {
-                            return Some(MultiReconstructResult {
-                                recovered_words: vec![(*w_a).to_string(), (*w_b).to_string()],
-                                recovered_mnemonic: mnemonic_text.clone(),
-                                address_index: i,
-                            });
-                        }
+                    if let Some(i) = match_seed_to_target(&seed, &target, kind, address_index_range)
+                    {
+                        return Some(MultiReconstructResult {
+                            recovered_words: vec![(*w_a).to_string(), (*w_b).to_string()],
+                            recovered_mnemonic: mnemonic_text.clone(),
+                            address_index: i,
+                        });
                     }
                 }
                 None
@@ -188,29 +207,19 @@ pub fn brute_force_passphrase(
     if !is_valid_mnemonic(mnemonic) {
         return Err(ReconstructError::BadInput(0));
     }
-    let target = target_address.trim().to_lowercase();
+    let target = if matches!(kind, AddressKind::Solana) {
+        target_address.trim().to_string()
+    } else {
+        target_address.trim().to_lowercase()
+    };
     let mnemonic_owned = mnemonic.to_string();
 
     let hit = candidates.par_iter().find_map_any(|pp| {
         let seed = mnemonic_to_seed(&mnemonic_owned, pp).ok()?;
-        for i in 0..address_index_range {
-            let derived = match kind {
-                AddressKind::BtcSegwit => derive_btc_segwit_key(&seed, i).ok(),
-                AddressKind::Eth => derive_eth_key(&seed, i).ok(),
-            };
-            let Some((_, pk)) = derived else { continue };
-            let addr = match kind {
-                AddressKind::BtcSegwit => btc_p2wpkh_address(&pk),
-                AddressKind::Eth => eth_address(&pk),
-            };
-            if addr.to_lowercase() == target {
-                return Some(PassphraseResult {
-                    passphrase: pp.clone(),
-                    address_index: i,
-                });
-            }
-        }
-        None
+        match_seed_to_target(&seed, &target, kind, address_index_range).map(|i| PassphraseResult {
+            passphrase: pp.clone(),
+            address_index: i,
+        })
     });
 
     hit.ok_or(ReconstructError::NoMatch)
