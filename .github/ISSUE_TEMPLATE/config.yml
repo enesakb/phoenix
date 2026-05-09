@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Recovery case (request to use the pilot tier)
+    url: https://github.com/enesakb/phoenix/discussions/new?category=early-access
+    about: Apply for the free-pilot tier. Never paste seeds, private keys, or passphrases. Recovery runs on your machine.
+  - name: Security disclosure
+    url: https://github.com/enesakb/phoenix/security/advisories/new
+    about: Report a security vulnerability privately.
+  - name: General question or discussion
+    url: https://github.com/enesakb/phoenix/discussions
+    about: Questions, ideas, anything that is not a bug or feature request.

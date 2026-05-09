@@ -1,0 +1,59 @@
+name: Feature request
+description: Propose a new feature or enhancement
+labels: [enhancement, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a feature. Please be specific about what would change and why.
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which layer does this affect?
+      options:
+        - L1 — Cognitive Excavation (interview, LLM, debate)
+        - L2 — Digital Forensic (file parsers, OCR, exhaust scanners)
+        - L3 — Constraint Inference (Bayesian, CSP, candidate ranking)
+        - L4 — Distributed Cracking (hashcat, GPU, orchestration)
+        - L5 — Verification & Restoration (BIP-39, derivation, addresses)
+        - L6 — Federated Learning (privacy-preserving improvement)
+        - UI / UX
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user pain or technical limitation. Be concrete; avoid abstractions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you implement this? Sketch the API, the file changes, and the test surface.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else did you think about? Why is this the best option?
+
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Invariants preserved
+      description: Confirm your proposal keeps Phoenix's core invariants.
+      options:
+        - label: This change does not break the local-only invariant (no seed/key leaves the user's machine)
+          required: true
+        - label: This change does not introduce a closed-source dependency
+          required: true
+        - label: This change does not use the phrase "AI wallet recovery" in user-facing copy
+          required: true

@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a bug in Phoenix
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill in as much detail as you can.
+
+        **Do not include your seed phrase, private key, or passphrase in this issue.** If the bug involves a recovery you cannot share publicly, redact aggressively or use the [Private Vulnerability Reporting](../security/advisories/new) channel instead.
+
+  - type: input
+    id: version
+    attributes:
+      label: Phoenix version
+      description: Output of `phoenix doctor`, or the git commit SHA you built from.
+      placeholder: e.g. 0.1.0 or commit abcd1234
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux (Ubuntu/Debian)
+        - Linux (Fedora/RHEL)
+        - Linux (Arch/other)
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: What you thought would happen instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Step-by-step. Include the exact command, file types involved, and any non-default config.
+      placeholder: |
+        1. Run `phoenix reconstruct ...`
+        2. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any error output, stack traces, or relevant log lines. **Redact wallet addresses, mnemonics, and any other sensitive data.**
+      render: shell

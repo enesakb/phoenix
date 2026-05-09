@@ -78,8 +78,8 @@ export function Reconstruct() {
             onChange={(e) => setKind(e.target.value as "eth" | "btc")}
             style={{ marginLeft: "0.5rem" }}
           >
-            <option value="eth">Ethereum (m/44'/60'/0'/0/i)</option>
-            <option value="btc">BTC native segwit (m/84'/0'/0'/0/i)</option>
+            <option value="eth">Ethereum (m/44&apos;/60&apos;/0&apos;/0/i)</option>
+            <option value="btc">BTC native segwit (m/84&apos;/0&apos;/0&apos;/0/i)</option>
           </select>
         </label>
 
