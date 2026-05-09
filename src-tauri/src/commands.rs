@@ -2,10 +2,13 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 use phoenix_core::crypto::{
-    address::AddressKind, reconstruct::reconstruct_missing_word,
+    address::AddressKind,
+    hashcat::{build_command, AttackMode, HashcatMode},
+    reconstruct::{brute_force_passphrase, reconstruct_missing_word, reconstruct_multi},
 };
 use phoenix_core::forensic::{
     Bip39TextExtractor, BitwardenCsvExtractor, ChromeHistoryExtractor, ExtractorRegistry,
+    MboxExtractor,
 };
 use phoenix_core::interview::{
     candidate::{self, Candidate},
@@ -50,6 +53,7 @@ impl InterviewState {
         let registry = ExtractorRegistry::new()
             .register(BitwardenCsvExtractor)
             .register(ChromeHistoryExtractor)
+            .register(MboxExtractor)
             .register(Bip39TextExtractor);
         Self {
             store,
@@ -208,11 +212,7 @@ pub struct ReconstructResponse {
 
 #[tauri::command]
 pub fn reconstruct(req: ReconstructRequest) -> Result<ReconstructResponse, String> {
-    let kind = match req.kind.as_str() {
-        "eth" => AddressKind::Eth,
-        "btc" => AddressKind::BtcSegwit,
-        other => return Err(format!("unknown kind: {other}")),
-    };
+    let kind = parse_kind(&req.kind)?;
     let started = std::time::Instant::now();
     let result = reconstruct_missing_word(
         &req.template,
@@ -228,6 +228,95 @@ pub fn reconstruct(req: ReconstructRequest) -> Result<ReconstructResponse, Strin
         address_index: result.address_index,
         elapsed_ms: started.elapsed().as_millis(),
     })
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MultiReconstructResponse {
+    pub recovered_words: Vec<String>,
+    pub recovered_mnemonic: String,
+    pub address_index: u32,
+    pub elapsed_ms: u128,
+}
+
+#[tauri::command]
+pub fn reconstruct_multi_words(req: ReconstructRequest) -> Result<MultiReconstructResponse, String> {
+    let kind = parse_kind(&req.kind)?;
+    let started = std::time::Instant::now();
+    let r = reconstruct_multi(&req.template, &req.target, kind, &req.passphrase, req.index_range)
+        .map_err(|e| e.to_string())?;
+    Ok(MultiReconstructResponse {
+        recovered_words: r.recovered_words,
+        recovered_mnemonic: r.recovered_mnemonic,
+        address_index: r.address_index,
+        elapsed_ms: started.elapsed().as_millis(),
+    })
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PassphraseBruteRequest {
+    pub mnemonic: String,
+    pub target: String,
+    pub kind: String,
+    pub candidates: Vec<String>,
+    pub index_range: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PassphraseBruteResponse {
+    pub passphrase: String,
+    pub address_index: u32,
+    pub elapsed_ms: u128,
+}
+
+#[tauri::command]
+pub fn brute_passphrase(req: PassphraseBruteRequest) -> Result<PassphraseBruteResponse, String> {
+    let kind = parse_kind(&req.kind)?;
+    let started = std::time::Instant::now();
+    let r = brute_force_passphrase(&req.mnemonic, &req.target, kind, &req.candidates, req.index_range)
+        .map_err(|e| e.to_string())?;
+    Ok(PassphraseBruteResponse {
+        passphrase: r.passphrase,
+        address_index: r.address_index,
+        elapsed_ms: started.elapsed().as_millis(),
+    })
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HashcatBuildRequest {
+    pub hash_file: String,
+    pub mode: u32,
+    pub attack: u32,
+    pub wordlist_or_mask: String,
+}
+
+#[tauri::command]
+pub fn build_hashcat(req: HashcatBuildRequest) -> Result<String, String> {
+    let mode = match req.mode {
+        11300 => HashcatMode::BitcoinWalletDat,
+        12700 => HashcatMode::BlockchainV1,
+        22500 => HashcatMode::MultiBitKey,
+        21700 => HashcatMode::Electrum1,
+        21800 => HashcatMode::Electrum2,
+        15700 => HashcatMode::MewV2,
+        27800 => HashcatMode::Bip38,
+        other => return Err(format!("unsupported hashcat mode: {other}")),
+    };
+    let attack = match req.attack {
+        0 => AttackMode::Straight,
+        1 => AttackMode::Combination,
+        3 => AttackMode::Mask,
+        other => return Err(format!("unsupported attack mode: {other}")),
+    };
+    let path = std::path::Path::new(&req.hash_file);
+    Ok(build_command(path, mode, attack, &req.wordlist_or_mask))
+}
+
+fn parse_kind(s: &str) -> Result<AddressKind, String> {
+    match s {
+        "eth" => Ok(AddressKind::Eth),
+        "btc" => Ok(AddressKind::BtcSegwit),
+        other => Err(format!("unknown kind: {other}")),
+    }
 }
 
 #[tauri::command]

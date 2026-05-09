@@ -8,11 +8,13 @@
 pub mod bip39_text;
 pub mod bitwarden_csv;
 pub mod chrome_history;
+pub mod mbox;
 pub mod registry;
 
 pub use bip39_text::Bip39TextExtractor;
 pub use bitwarden_csv::BitwardenCsvExtractor;
 pub use chrome_history::ChromeHistoryExtractor;
+pub use mbox::MboxExtractor;
 pub use registry::{ExtractError, Extractor, ExtractorRegistry};
 
 use std::collections::HashSet;

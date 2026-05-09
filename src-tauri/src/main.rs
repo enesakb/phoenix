@@ -16,6 +16,9 @@ fn main() {
             commands::complete_interview,
             commands::import_file,
             commands::reconstruct,
+            commands::reconstruct_multi_words,
+            commands::brute_passphrase,
+            commands::build_hashcat,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Phoenix");
