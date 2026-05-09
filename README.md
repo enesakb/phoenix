@@ -206,6 +206,22 @@ Track progress in the [Releases](https://github.com/enesakb/phoenix/releases) ta
 
 ---
 
+## Support the project
+
+Phoenix is open-source and free for the first 5 successful pilot recoveries. If the project saves you a wallet you thought was gone, voluntary donations help fund the next users' free recoveries and the upcoming Trail of Bits audit.
+
+| Chain | Address |
+| :--- | :--- |
+| **Bitcoin** (Taproot) | `bc1pswqcehh9nlkvnepulg58mp5p0kyfgcv3cw2s4qdljrwd9gtf80ksh4q9cg` |
+| **Ethereum** (and EVM L2s) | `0x1341e0A851E9c5656C65e764fE3B841908514603` |
+| **Solana** | `J88Epp5C6oDVsFNLJwZuN8eQXjYiwJhpy1kjtUZY6J7p` |
+
+The maintainer holds these seeds offline; Phoenix the project does not custody funds. Cross-verify in [`docs/wallets.md`](docs/wallets.md) (history-tracked). See [`docs/payments.md`](docs/payments.md) for the full payment architecture and the v0.8 atomic-split contract spec.
+
+> ⚠ **Always send a small test transaction first.** If you find a Phoenix address that does not match the table above or `docs/wallets.md`, do not send funds — you may be looking at an impersonator.
+
+---
+
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
