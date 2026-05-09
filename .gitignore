@@ -28,3 +28,23 @@ phoenix-config.toml
 phoenix.log
 phoenix-data/
 *.recovery
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+secrets/
+*-secrets.json
+.aws/
+.ssh/
+id_rsa
+id_ed25519
+mnemonic.txt
+seed.txt
+wallet-seed.*
+**/private_keys.*
