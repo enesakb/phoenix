@@ -1380,6 +1380,7 @@ dependencies = [
  "ed25519-dalek",
  "futures",
  "hex",
+ "rand 0.8.6",
  "rayon",
  "reqwest",
  "ripemd",

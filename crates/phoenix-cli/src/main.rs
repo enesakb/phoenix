@@ -1,9 +1,12 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use phoenix_core::crypto::{
-    address::AddressKind,
-    mnemonic::mnemonic_to_seed,
+    address::{btc_p2wpkh_address, eth_address, AddressKind},
+    derive::{derive_btc_segwit_key, derive_eth_key},
+    mnemonic::{generate_fresh_mnemonic, mnemonic_to_seed},
     reconstruct::reconstruct_missing_word,
-    solana::{all_addresses, derive_solana_signing_key, solana_address, ALL_PATHS},
+    solana::{
+        all_addresses, derive_solana_signing_key, phantom_address, solana_address, ALL_PATHS,
+    },
 };
 use phoenix_core::llm::{LlmClient, OllamaClient};
 
@@ -52,6 +55,15 @@ enum Command {
         #[arg(long)]
         mnemonic: String,
         /// Optional BIP-39 passphrase.
+        #[arg(long, default_value = "")]
+        passphrase: String,
+    },
+    /// Generate a fresh BIP-39 wallet locally (entropy from OS RNG).
+    /// Prints the seed phrase ONCE — write it down on paper before continuing.
+    /// Also prints the BTC + ETH + Solana receive addresses you can share.
+    /// Phoenix never persists or transmits the seed.
+    WalletCreate {
+        /// Optional BIP-39 passphrase to layer on top of the seed.
         #[arg(long, default_value = "")]
         passphrase: String,
     },
@@ -111,6 +123,46 @@ async fn main() -> anyhow::Result<()> {
                     std::process::exit(1);
                 }
             }
+        }
+        Command::WalletCreate { passphrase } => {
+            let mnemonic = generate_fresh_mnemonic();
+            let seed = mnemonic_to_seed(&mnemonic, &passphrase)?;
+
+            let (_, btc_pk) = derive_btc_segwit_key(&seed, 0)?;
+            let (_, eth_pk) = derive_eth_key(&seed, 0)?;
+
+            println!();
+            println!("════════════════════════════════════════════════════════════════════════");
+            println!("  ⚠ WRITE THIS DOWN. ON PAPER. NOW.");
+            println!("════════════════════════════════════════════════════════════════════════");
+            println!();
+            println!("  BIP-39 mnemonic (12 words, KEEP SECRET):");
+            println!();
+            for (i, word) in mnemonic.split_whitespace().enumerate() {
+                println!("    {:2}.  {}", i + 1, word);
+            }
+            println!();
+            println!("════════════════════════════════════════════════════════════════════════");
+            println!("  Your public receive addresses (safe to share publicly):");
+            println!("════════════════════════════════════════════════════════════════════════");
+            println!();
+            println!("    BTC (native segwit, m/84'/0'/0'/0/0)");
+            println!("      {}", btc_p2wpkh_address(&btc_pk));
+            println!();
+            println!("    ETH (m/44'/60'/0'/0/0)");
+            println!("      {}", eth_address(&eth_pk));
+            println!();
+            println!("    Solana / Phantom (m/44'/501'/0'/0')");
+            println!("      {}", phantom_address(&seed));
+            println!();
+            println!("════════════════════════════════════════════════════════════════════════");
+            println!("  AFTER you have written the mnemonic on paper:");
+            println!("    1. Clear this terminal screen (Ctrl+L on Linux/Mac, Clear-Host on PS).");
+            println!("    2. Verify by importing the mnemonic into a real wallet (Phantom,");
+            println!("       MetaMask, Sparrow). The addresses must match.");
+            println!("    3. Send only the public addresses to anyone — never the mnemonic.");
+            println!("════════════════════════════════════════════════════════════════════════");
+            println!();
         }
         Command::SolanaShow {
             mnemonic,
