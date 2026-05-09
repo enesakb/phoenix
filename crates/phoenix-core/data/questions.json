@@ -1,0 +1,308 @@
+[
+  {
+    "id": "fr-01",
+    "category": "free_recall",
+    "text": "Tell me everything you can remember about the lost wallet — when you created it, what you did with it, any details that come to mind. Do not edit yourself; even seemingly trivial details help.",
+    "follow_up_hints": ["timeline anchor events", "people who saw the seed", "physical location of creation"]
+  },
+  {
+    "id": "fr-02",
+    "category": "free_recall",
+    "text": "What is the very first thing that comes to mind when you picture the moment you set up this wallet?",
+    "follow_up_hints": ["sensory detail", "co-present people", "device used"]
+  },
+  {
+    "id": "fr-03",
+    "category": "free_recall",
+    "text": "What is the most recent moment you knew the seed phrase or password was still accessible to you?",
+    "follow_up_hints": ["last successful login", "last backup attempt", "last write-down"]
+  },
+  {
+    "id": "ctx-01",
+    "category": "context_reinstatement",
+    "text": "Where were you physically when you created or last used this wallet? Describe the room, lighting, sounds, anything around you.",
+    "follow_up_hints": ["specific city or apartment", "season", "time of day"]
+  },
+  {
+    "id": "ctx-02",
+    "category": "context_reinstatement",
+    "text": "What was happening in your life that week — work, travel, anything stressful or memorable?",
+    "follow_up_hints": ["job change", "moving house", "relationship event"]
+  },
+  {
+    "id": "ctx-03",
+    "category": "context_reinstatement",
+    "text": "What device did you create the wallet on, and what state was the device in (new, old, lent from a friend)?",
+    "follow_up_hints": ["operating system", "browser", "borrowed hardware"]
+  },
+  {
+    "id": "ctx-04",
+    "category": "context_reinstatement",
+    "text": "Were you logged into any other accounts at the same time — email, password manager, exchange? Which ones?",
+    "follow_up_hints": ["session overlap", "auto-fill behavior", "cross-device sync"]
+  },
+  {
+    "id": "rev-01",
+    "category": "reverse_order",
+    "text": "Walk me from now backwards: the last time you tried to access this wallet, before that, before that. What made each attempt fail?",
+    "follow_up_hints": ["most recent error message", "specific wrong word", "device change between attempts"]
+  },
+  {
+    "id": "rev-02",
+    "category": "reverse_order",
+    "text": "In reverse, from most recent: where might you have written down or stored anything related to this wallet?",
+    "follow_up_hints": ["paper, vault, drawer", "encrypted note app", "shared with partner"]
+  },
+  {
+    "id": "perspective-01",
+    "category": "change_perspective",
+    "text": "Imagine watching yourself from above the day you set up this wallet. What does past-you do first, second, third?",
+    "follow_up_hints": ["external observer detail", "ritual or habit", "screen state"]
+  },
+  {
+    "id": "perspective-02",
+    "category": "change_perspective",
+    "text": "If a close friend who knew you well at that time were here, what would they remember about this wallet that you might not?",
+    "follow_up_hints": ["confided seed", "shared passphrase pattern", "joint account"]
+  },
+  {
+    "id": "wallet-01",
+    "category": "wallet_specific",
+    "text": "What kind of wallet is it — Bitcoin Core, Electrum, MetaMask, Phantom, Ledger, Trezor, exchange account, paper wallet? Be specific.",
+    "follow_up_hints": ["wallet software version", "chain", "self-custody vs custodial"]
+  },
+  {
+    "id": "wallet-02",
+    "category": "wallet_specific",
+    "text": "Which blockchain network and address format? (Bitcoin segwit, Ethereum 0x, Solana base58, etc.)",
+    "follow_up_hints": ["public address", "transaction history", "first deposit source"]
+  },
+  {
+    "id": "wallet-03",
+    "category": "wallet_specific",
+    "text": "Did this wallet use a 12-word, 24-word, or longer seed phrase? Or no seed at all (e.g. brain wallet, exchange password)?",
+    "follow_up_hints": ["BIP-39 wordlist", "passphrase on top of seed", "custom word selection"]
+  },
+  {
+    "id": "wallet-04",
+    "category": "wallet_specific",
+    "text": "Was there an additional passphrase or 'hidden wallet' feature enabled (BIP-39 passphrase, Trezor passphrase, Ledger passphrase)?",
+    "follow_up_hints": ["passphrase in addition to seed", "hidden account separator"]
+  },
+  {
+    "id": "wallet-05",
+    "category": "wallet_specific",
+    "text": "When was this wallet created — exact date if possible, otherwise the year and season?",
+    "follow_up_hints": ["wallet software release date check", "first transaction timestamp"]
+  },
+  {
+    "id": "pat-01",
+    "category": "pattern_identification",
+    "text": "What kinds of passwords did you typically use during that period of your life? Common roots, numbers, special characters?",
+    "follow_up_hints": ["base word", "year suffix", "leet-speak substitutions"]
+  },
+  {
+    "id": "pat-02",
+    "category": "pattern_identification",
+    "text": "Do you have a password manager from that era? What patterns appear across the entries?",
+    "follow_up_hints": ["common substring", "keyboard walk", "recurring phrase"]
+  },
+  {
+    "id": "pat-03",
+    "category": "pattern_identification",
+    "text": "Was the passphrase a meaningful sentence or phrase to you? A song lyric, book quote, inside joke?",
+    "follow_up_hints": ["semantic anchor", "language", "punctuation habits"]
+  },
+  {
+    "id": "pat-04",
+    "category": "pattern_identification",
+    "text": "Did you use any specific number sequences in passwords during that period (birthdays, anniversaries, addresses)?",
+    "follow_up_hints": ["personal date", "phone number suffix", "address number"]
+  },
+  {
+    "id": "pat-05",
+    "category": "pattern_identification",
+    "text": "Were there any rules you imposed on yourself — minimum length, must contain special character, must not be a real word?",
+    "follow_up_hints": ["self-imposed constraints", "site-specific rules", "shifting rules over time"]
+  },
+  {
+    "id": "phys-01",
+    "category": "physical_artifacts",
+    "text": "Did you write the seed or password on paper? Where might that paper be — a safe, a drawer, inside a book, taped to a wall?",
+    "follow_up_hints": ["specific hiding place", "given to lawyer/family", "destroyed deliberately"]
+  },
+  {
+    "id": "phys-02",
+    "category": "physical_artifacts",
+    "text": "Did you use a metal seed plate, engraving, or similar physical backup?",
+    "follow_up_hints": ["Cryptosteel, Billfodl", "stored offsite"]
+  },
+  {
+    "id": "phys-03",
+    "category": "physical_artifacts",
+    "text": "Could the seed have been on a sticker, label, postcard, t-shirt, tattoo, or any unconventional medium?",
+    "follow_up_hints": ["unusual medium", "shared with another person"]
+  },
+  {
+    "id": "phys-04",
+    "category": "physical_artifacts",
+    "text": "Did you use a hardware wallet? If yes, do you still have the physical device, and do you remember the PIN?",
+    "follow_up_hints": ["device model", "PIN attempts remaining", "reset vs lost"]
+  },
+  {
+    "id": "phys-05",
+    "category": "physical_artifacts",
+    "text": "Where do you keep important paper documents from that era today (lease, taxes, medical records)? The seed might be filed alongside.",
+    "follow_up_hints": ["records storage habit", "shared filing"]
+  },
+  {
+    "id": "dig-01",
+    "category": "digital_artifacts",
+    "text": "Do you have any backups from that period — Time Machine, iCloud, Google Drive, Dropbox, an old hard drive in a box?",
+    "follow_up_hints": ["backup recency", "encryption status", "physical access to drive"]
+  },
+  {
+    "id": "dig-02",
+    "category": "digital_artifacts",
+    "text": "Did you ever take a photo of the seed phrase, even briefly, with any device?",
+    "follow_up_hints": ["camera roll", "deleted thumbnails", "synced to cloud"]
+  },
+  {
+    "id": "dig-03",
+    "category": "digital_artifacts",
+    "text": "Did you store the seed or password in any password manager (1Password, KeePass, LastPass, Apple Keychain, browser autofill)?",
+    "follow_up_hints": ["specific manager", "exported vault file", "still authenticatable"]
+  },
+  {
+    "id": "dig-04",
+    "category": "digital_artifacts",
+    "text": "Do you have email backups (Gmail Takeout, IMAP archive)? You may have emailed yourself a hint or instructions.",
+    "follow_up_hints": ["self-sent emails", "wallet creation confirmations", "recovery emails"]
+  },
+  {
+    "id": "dig-05",
+    "category": "digital_artifacts",
+    "text": "Did you use any cloud notes app (Apple Notes, Google Keep, Notion, Obsidian) during that period? An old note may contain a fragment.",
+    "follow_up_hints": ["deleted notes recoverable", "tagged 'crypto' or 'wallet'", "shared with partner"]
+  },
+  {
+    "id": "dig-06",
+    "category": "digital_artifacts",
+    "text": "Did you ever paste the seed or password into a chat app (Telegram saved messages, WhatsApp self-chat, Signal note to self)?",
+    "follow_up_hints": ["self-message archives", "deleted but recoverable"]
+  },
+  {
+    "id": "dig-07",
+    "category": "digital_artifacts",
+    "text": "Do you use a clipboard manager? It may have logged the seed when you copied it once.",
+    "follow_up_hints": ["clipboard manager name", "history retention", "encrypted"]
+  },
+  {
+    "id": "dig-08",
+    "category": "digital_artifacts",
+    "text": "Have you searched your old browser history and downloaded files from that era? Any wallet-creation pages or PDFs?",
+    "follow_up_hints": ["browser history dump", "downloaded recovery PDF"]
+  },
+  {
+    "id": "wallet-06",
+    "category": "wallet_specific",
+    "text": "Did this wallet ever hold significant funds, or was it small? The amount affects how careful you might have been with backups.",
+    "follow_up_hints": ["careful storage if large", "casual storage if small"]
+  },
+  {
+    "id": "ctx-05",
+    "category": "context_reinstatement",
+    "text": "Was anyone with you when you set this up — partner, friend, family member, coworker?",
+    "follow_up_hints": ["co-witness", "shared passphrase memory", "verbal confirmation"]
+  },
+  {
+    "id": "fr-04",
+    "category": "free_recall",
+    "text": "What feeling do you associate with this wallet now — regret, hope, frustration? Sometimes emotional context aids recall.",
+    "follow_up_hints": ["emotional anchor", "ritualized memory", "avoidance pattern"]
+  },
+  {
+    "id": "perspective-03",
+    "category": "change_perspective",
+    "text": "If you were teaching someone else how you set up this kind of wallet, walk through the steps as a tutorial. What do you say?",
+    "follow_up_hints": ["procedural memory", "default settings used", "common omissions"]
+  },
+  {
+    "id": "rev-03",
+    "category": "reverse_order",
+    "text": "Working backward through your devices: what computers and phones have you owned since this wallet was created? Any still accessible?",
+    "follow_up_hints": ["device timeline", "data forensics targets", "still bootable"]
+  },
+  {
+    "id": "pat-06",
+    "category": "pattern_identification",
+    "text": "When you choose words for passphrases, do you tend toward English, your native language, mixed, made-up?",
+    "follow_up_hints": ["language pool", "non-dictionary words", "transliterations"]
+  },
+  {
+    "id": "phys-06",
+    "category": "physical_artifacts",
+    "text": "Have you moved house since you created this wallet? Could the seed be in a box of items you have not unpacked?",
+    "follow_up_hints": ["unpacked storage", "lost in move", "donated by mistake"]
+  },
+  {
+    "id": "dig-09",
+    "category": "digital_artifacts",
+    "text": "Could the seed be in a draft of an email or document you never sent or finalized?",
+    "follow_up_hints": ["Gmail drafts", "Word/Pages unsent", "DropBox versioning"]
+  },
+  {
+    "id": "wallet-07",
+    "category": "wallet_specific",
+    "text": "Did the wallet have a custom derivation path or non-standard configuration? (More common with multi-account hardware setups.)",
+    "follow_up_hints": ["BIP-44 vs custom", "account index used", "passphrase combined"]
+  },
+  {
+    "id": "ctx-06",
+    "category": "context_reinstatement",
+    "text": "Was the wallet a gift from someone, or did you set it up specifically because someone recommended you do so?",
+    "follow_up_hints": ["recommender", "shared knowledge", "prescription notes"]
+  },
+  {
+    "id": "fr-05",
+    "category": "free_recall",
+    "text": "Anything else — even something that seems irrelevant or embarrassing — that you remember from around the time of this wallet?",
+    "follow_up_hints": ["associative recall", "tangential detail", "secondary memory"]
+  },
+  {
+    "id": "wallet-08",
+    "category": "wallet_specific",
+    "text": "What is the public address of the wallet, if you know it? We can verify what is on-chain and narrow recovery scope.",
+    "follow_up_hints": ["verifiable on-chain", "transaction graph", "creation date inference"]
+  },
+  {
+    "id": "pat-07",
+    "category": "pattern_identification",
+    "text": "If you used a passphrase, did it have a specific theme — a hobby, a person you cared about, a place?",
+    "follow_up_hints": ["thematic anchor", "name of pet", "favorite location"]
+  },
+  {
+    "id": "phys-07",
+    "category": "physical_artifacts",
+    "text": "Did you split the seed (e.g. SLIP-39, Shamir, or just half-and-half across two locations)?",
+    "follow_up_hints": ["split methodology", "second half location", "co-trustee"]
+  },
+  {
+    "id": "dig-10",
+    "category": "digital_artifacts",
+    "text": "Have you searched your spouse's, partner's, or close family member's devices? They may have helped or have a copy.",
+    "follow_up_hints": ["co-storage", "trusted backup", "shared cloud account"]
+  },
+  {
+    "id": "ctx-07",
+    "category": "context_reinstatement",
+    "text": "Roughly how much have you searched for the seed already? Hours, days, weeks? What have you tried that did not work?",
+    "follow_up_hints": ["prior search effort", "ruled-out hypotheses", "tools already tried"]
+  },
+  {
+    "id": "fr-06",
+    "category": "free_recall",
+    "text": "If the wallet were to magically open right now, what would you do with the funds? (This is just to surface motivation; it has no bearing on recovery.)",
+    "follow_up_hints": ["motivation strength", "intended use", "stake in outcome"]
+  }
+]
