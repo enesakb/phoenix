@@ -274,9 +274,9 @@ Phoenix is open-source and free for the first 5 successful pilot recoveries. If 
 
 | Chain | Address |
 | :--- | :--- |
-| **Bitcoin** (Taproot) | `bc1pswqcehh9nlkvnepulg58mp5p0kyfgcv3cw2s4qdljrwd9gtf80ksh4q9cg` |
-| **Ethereum** (and EVM L2s) | `0x1341e0A851E9c5656C65e764fE3B841908514603` |
-| **Solana** | `J88Epp5C6oDVsFNLJwZuN8eQXjYiwJhpy1kjtUZY6J7p` |
+| **Bitcoin** (Taproot) | `bc1p0730rztrz3yw3fc0an28tuxft0cstfcfr7mu0umc4scl8z0kradqzprlpr` |
+| **EVM** (Ethereum, Base, Monad, Optimism, Arbitrum, Polygon, BNB, Avalanche, zkSync, Linea) | `0x7C17c4937cABD75CB8657f5fb1c4184325Bff652` |
+| **Solana** | `5De7kbLn9SSsKLVQCCMdcRyAvofeijD6VQPqc9CZXwyT` |
 
 The maintainer holds these seeds offline; Phoenix the project does not custody funds. Cross-verify in [`docs/wallets.md`](docs/wallets.md) (history-tracked). See [`docs/payments.md`](docs/payments.md) for the full payment architecture and the v0.8 atomic-split contract spec.
 
