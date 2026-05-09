@@ -10,7 +10,7 @@ use phoenix_core::crypto::{
     derive::{derive_btc_segwit_key, derive_eth_key},
     mnemonic::mnemonic_to_seed,
     reconstruct::{brute_force_passphrase, reconstruct_missing_word, reconstruct_multi},
-    solana::{phantom_address, solana_address, derive_solana_signing_key, SOLFLARE_PATH},
+    solana::{derive_solana_signing_key, phantom_address, solana_address, SOLFLARE_PATH},
 };
 
 /// Five publicly-known BIP-39 test vectors. None of these have ever held real
@@ -32,7 +32,13 @@ fn replace_word(mnemonic: &str, position: usize, replacement: &str) -> String {
     mnemonic
         .split_whitespace()
         .enumerate()
-        .map(|(i, w)| if i == position { replacement.to_string() } else { w.to_string() })
+        .map(|(i, w)| {
+            if i == position {
+                replacement.to_string()
+            } else {
+                w.to_string()
+            }
+        })
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -63,8 +69,7 @@ fn stress_eth_recovery_across_five_distinct_mnemonics() {
 
         // Try missing last word.
         let template = replace_word(mnemonic, 11, "?");
-        let result =
-            reconstruct_missing_word(&template, &target, AddressKind::Eth, "", 1).unwrap();
+        let result = reconstruct_missing_word(&template, &target, AddressKind::Eth, "", 1).unwrap();
         assert_eq!(
             result.recovered_word,
             last_word(mnemonic),
@@ -138,8 +143,7 @@ fn stress_solana_solflare_path_specifically() {
     let target = solana_address(&derive_solana_signing_key(&seed, SOLFLARE_PATH));
 
     let template = replace_word(mnemonic, 11, "?");
-    let result =
-        reconstruct_missing_word(&template, &target, AddressKind::Solana, "", 1).unwrap();
+    let result = reconstruct_missing_word(&template, &target, AddressKind::Solana, "", 1).unwrap();
     assert_eq!(result.recovered_word, last_word(mnemonic));
     assert_eq!(result.address_index, 1, "Solflare is index 1 in ALL_PATHS");
 }
@@ -198,8 +202,7 @@ fn stress_recovery_is_deterministic_repeat_10x() {
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ?";
 
     for i in 0..10 {
-        let result =
-            reconstruct_missing_word(template, &target, AddressKind::Eth, "", 1).unwrap();
+        let result = reconstruct_missing_word(template, &target, AddressKind::Eth, "", 1).unwrap();
         assert_eq!(
             result.recovered_word, "about",
             "iteration {i}: result is non-deterministic"
@@ -217,8 +220,7 @@ fn stress_mismatched_kind_does_not_falsely_succeed() {
     let template = replace_word(mnemonic, 11, "?");
 
     // Should not match because we're deriving Solana addresses but target is ETH-formatted.
-    let result =
-        reconstruct_missing_word(&template, &eth_target, AddressKind::Solana, "", 1);
+    let result = reconstruct_missing_word(&template, &eth_target, AddressKind::Solana, "", 1);
     assert!(
         result.is_err(),
         "ETH target with Solana derivation must not produce a false positive"
