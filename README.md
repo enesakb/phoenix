@@ -93,6 +93,68 @@ Detailed design: [`docs/superpowers/specs/2026-05-08-phoenix-design.md`](docs/su
 
 ---
 
+## Quick start — for users with a lost wallet
+
+You do not need to install Rust, Node, or anything else. Download the binary for your operating system from the [Releases page](https://github.com/enesakb/phoenix/releases/latest), make it executable, and run it.
+
+### Windows
+
+1. Download `phoenix-windows-x86_64.exe` from the [latest release](https://github.com/enesakb/phoenix/releases/latest).
+2. Open a PowerShell window in the folder where the file is saved.
+3. Run:
+   ```powershell
+   .\phoenix-windows-x86_64.exe reconstruct `
+     --template "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ?" `
+     --target "0x9858effd232b4033e47d90003d41ec34ecaeda94" `
+     --kind eth
+   ```
+4. Replace the template with your own 12 words (use `?` for the unknown one) and the target with your wallet address.
+
+### macOS
+
+1. Download `phoenix-macos-arm64` (Apple Silicon) or `phoenix-macos-x86_64` (Intel).
+2. Open Terminal in the download folder.
+3. Make it executable and run:
+   ```bash
+   chmod +x phoenix-macos-arm64
+   ./phoenix-macos-arm64 reconstruct \
+     --template "abandon abandon ... abandon ?" \
+     --target "0x9858eff..." \
+     --kind eth
+   ```
+4. macOS may show a Gatekeeper warning the first time — go to System Settings → Privacy & Security → "Allow Anyway".
+
+### Linux
+
+```bash
+curl -L https://github.com/enesakb/phoenix/releases/latest/download/phoenix-linux-x86_64 -o phoenix
+chmod +x phoenix
+./phoenix reconstruct \
+  --template "abandon abandon ... abandon ?" \
+  --target "0x9858eff..." \
+  --kind eth
+```
+
+### What `--kind` to pick
+
+| If your wallet is on… | `--kind` value |
+| :--- | :--- |
+| Bitcoin (most modern wallets) | `btc` |
+| Ethereum, Base, Optimism, Arbitrum, Polygon, BNB | `eth` |
+| Solana (Phantom, Solflare, Backpack) | `sol` |
+
+### Verifying the binary you downloaded
+
+Each release includes a `SHA256SUMS.txt` file. After downloading the binary, run:
+
+```bash
+sha256sum -c SHA256SUMS.txt
+```
+
+(or `Get-FileHash` on Windows). If the checksum does not match, do not run the binary — you may have downloaded an impersonator's tampered file.
+
+---
+
 ## Build from source
 
 ### Prerequisites

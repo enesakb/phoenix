@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] – 2026-05-10 — `v0.8.0`
+
+### Added
+- **Pre-built binaries** for Windows, macOS (Apple Silicon + Intel), and Linux, attached to GitHub Releases. End users no longer need to install Rust, Node, Tauri, or Ollama to run a recovery — just download and execute. SHA256SUMS.txt accompanies every release.
+- `.github/workflows/release.yml` — multi-platform CLI build pipeline triggered on `v*` tag push.
+- README "Quick start" section with platform-specific download + run instructions.
+- `phoenix wallet-create` CLI for generating a fresh BIP-39 mnemonic locally with OS RNG entropy. Prints to terminal, never persisted.
+- Public donation addresses (BTC Taproot, ETH EIP-55, Solana base58) registered in `docs/wallets.md` and surfaced in the README + landing page Support section.
+- `docs/payments.md` — three-tier payment architecture: donations now, atomic split contract in v0.9, Stripe subscriptions after legal entity setup.
+
+
 ## [0.7.0] – 2026-05-09 — `week-7-solana`
 
 ### Added
