@@ -5,6 +5,7 @@
 //! explicit user action.
 
 pub mod config;
+pub mod forensic;
 pub mod interview;
 pub mod llm;
 pub mod logging;

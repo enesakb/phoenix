@@ -3,6 +3,7 @@ import { Welcome } from "./routes/Welcome";
 import { Settings } from "./routes/Settings";
 import { Interview } from "./routes/Interview";
 import { Candidates } from "./routes/Candidates";
+import { Import } from "./routes/Import";
 
 export function App() {
   return (
@@ -17,6 +18,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<Welcome />} />
         <Route path="/interview" element={<Interview />} />
+        <Route path="/import/:sessionId" element={<Import />} />
         <Route path="/candidates/:sessionId" element={<Candidates />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>

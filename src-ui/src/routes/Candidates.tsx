@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Candidate, MemoryState, getCandidates, getMemory } from "../lib/interview";
 
 export function Candidates() {
@@ -33,6 +33,9 @@ export function Candidates() {
       <p style={{ opacity: 0.7 }}>
         Session <code>{sessionId}</code> — {memory.nodes.length} memory nodes,{" "}
         {candidates.length} candidates.
+      </p>
+      <p>
+        <Link to={`/import/${sessionId}`}>+ Import forensic files</Link>
       </p>
 
       <h2 style={{ marginTop: "2rem" }}>Ranked candidates</h2>

@@ -4,6 +4,7 @@ mod commands;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(commands::InterviewState::new())
         .invoke_handler(tauri::generate_handler![
             commands::app_info,
@@ -13,6 +14,7 @@ fn main() {
             commands::get_candidates,
             commands::get_memory,
             commands::complete_interview,
+            commands::import_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Phoenix");

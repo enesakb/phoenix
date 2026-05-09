@@ -1,5 +1,9 @@
+use std::path::PathBuf;
 use std::sync::Mutex;
 
+use phoenix_core::forensic::{
+    Bip39TextExtractor, BitwardenCsvExtractor, ChromeHistoryExtractor, ExtractorRegistry,
+};
 use phoenix_core::interview::{
     candidate::{self, Candidate},
     interviewer::Interviewer,
@@ -27,6 +31,7 @@ pub fn app_info() -> AppInfo {
 pub struct InterviewState {
     pub store: SessionStore,
     pub bank: QuestionBank,
+    pub registry: ExtractorRegistry,
     pub current: Mutex<Option<InterviewSession>>,
     pub llm_endpoint: String,
     pub llm_model: String,
@@ -39,9 +44,14 @@ impl InterviewState {
         data_dir.push("sessions");
         let store = SessionStore::new(&data_dir).expect("init session store");
         let bank = QuestionBank::from_embedded().expect("embedded question bank");
+        let registry = ExtractorRegistry::new()
+            .register(BitwardenCsvExtractor)
+            .register(ChromeHistoryExtractor)
+            .register(Bip39TextExtractor);
         Self {
             store,
             bank,
+            registry,
             current: Mutex::new(None),
             llm_endpoint: "http://localhost:11434".to_string(),
             llm_model: "qwen3:14b".to_string(),
@@ -168,6 +178,50 @@ pub fn complete_interview(
         .save(&session)
         .map_err(|e| e.to_string())?;
     Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ImportResult {
+    pub nodes_added: usize,
+    pub total_candidates: usize,
+}
+
+#[tauri::command]
+pub fn import_file(
+    state: tauri::State<'_, InterviewState>,
+    session_id: String,
+    file_path: String,
+) -> Result<ImportResult, String> {
+    let mut session: InterviewSession = state
+        .store
+        .load(&session_id)
+        .map_err(|e| e.to_string())?;
+
+    let path = PathBuf::from(&file_path);
+    if !path.exists() {
+        return Err(format!("file not found: {file_path}"));
+    }
+
+    let new_nodes = state
+        .registry
+        .dispatch(&path)
+        .map_err(|e| e.to_string())?;
+    let added = new_nodes.len();
+    for node in new_nodes {
+        session.memory.add(node);
+    }
+    session.candidates = candidate::extract(&session.memory);
+
+    state
+        .store
+        .save(&session)
+        .map_err(|e| e.to_string())?;
+    let total_candidates = session.candidates.len();
+
+    Ok(ImportResult {
+        nodes_added: added,
+        total_candidates,
+    })
 }
 
 #[cfg(test)]
