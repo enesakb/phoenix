@@ -42,13 +42,17 @@ fn match_seed_to_target(
 
 #[derive(Debug, Error)]
 pub enum ReconstructError {
-    #[error("expected 12 tokens (with one or more '?' wildcards); got {0}")]
-    BadInput(usize),
+    #[error("template must have exactly 12 space-separated words (got {0}). Example: \"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ?\"")]
+    BadTokenCount(usize),
+    #[error("template has no '?' wildcard — at least one position must be unknown for reconstruction to do anything. Replace your missing word with '?'")]
+    NoWildcard,
+    #[error("invalid BIP-39 word at position {position}: \"{word}\". Only the 2048 standard English BIP-39 words are valid. Check spelling.")]
+    InvalidWord { position: usize, word: String },
     #[error("missing-word position must be 0..=11; got {0}")]
     BadPosition(usize),
-    #[error("too many missing words: {0} (max 2 supported in pure-Rust mode)")]
+    #[error("too many missing words: {0} (max 2 supported in pure-Rust mode; use the Hashcat command builder for 3+)")]
     TooManyMissing(usize),
-    #[error("address index search range exceeded")]
+    #[error("no candidate seed produces the target address. Possible causes: (1) wrong --kind (try eth/btc/sol), (2) target address typo, (3) wallet uses a non-standard derivation path or BIP-39 passphrase, (4) more than the supported number of words are wrong")]
     NoMatch,
 }
 
@@ -83,14 +87,27 @@ pub fn reconstruct_missing_word(
 ) -> Result<ReconstructResult, ReconstructError> {
     let tokens: Vec<&str> = template.split_whitespace().collect();
     if tokens.len() != 12 {
-        return Err(ReconstructError::BadInput(tokens.len()));
+        return Err(ReconstructError::BadTokenCount(tokens.len()));
     }
     let missing_pos = tokens
         .iter()
         .position(|t| *t == "?")
-        .ok_or(ReconstructError::BadInput(tokens.len()))?;
+        .ok_or(ReconstructError::NoWildcard)?;
     if missing_pos >= 12 {
         return Err(ReconstructError::BadPosition(missing_pos));
+    }
+    // Validate that every non-wildcard token is a real BIP-39 word.
+    let bip39_words = crate::forensic::bip39_word_set();
+    for (i, tok) in tokens.iter().enumerate() {
+        if *tok == "?" {
+            continue;
+        }
+        if !bip39_words.contains(*tok) {
+            return Err(ReconstructError::InvalidWord {
+                position: i,
+                word: (*tok).to_string(),
+            });
+        }
     }
 
     // Solana addresses are case-sensitive base58; BTC bech32 + ETH 0x are case-insensitive.
@@ -131,7 +148,7 @@ pub fn reconstruct_multi(
 ) -> Result<MultiReconstructResult, ReconstructError> {
     let tokens: Vec<&str> = template.split_whitespace().collect();
     if tokens.len() != 12 {
-        return Err(ReconstructError::BadInput(tokens.len()));
+        return Err(ReconstructError::BadTokenCount(tokens.len()));
     }
     let missing: Vec<usize> = tokens
         .iter()
@@ -139,7 +156,7 @@ pub fn reconstruct_multi(
         .filter_map(|(i, t)| if *t == "?" { Some(i) } else { None })
         .collect();
     match missing.len() {
-        0 => Err(ReconstructError::BadInput(0)),
+        0 => Err(ReconstructError::NoWildcard),
         1 => {
             let single = reconstruct_missing_word(
                 template,
@@ -205,7 +222,8 @@ pub fn brute_force_passphrase(
     address_index_range: u32,
 ) -> Result<PassphraseResult, ReconstructError> {
     if !is_valid_mnemonic(mnemonic) {
-        return Err(ReconstructError::BadInput(0));
+        let count = mnemonic.split_whitespace().count();
+        return Err(ReconstructError::BadTokenCount(count));
     }
     let target = if matches!(kind, AddressKind::Solana) {
         target_address.trim().to_string()
