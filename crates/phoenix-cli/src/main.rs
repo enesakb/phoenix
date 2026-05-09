@@ -90,6 +90,46 @@ fn doctor_output() -> String {
     format!("phoenix-core version: {}", phoenix_core::version())
 }
 
+/// Public donation addresses pinned in `docs/wallets.md`. These are the same
+/// addresses surfaced on the landing page and in the README. Shown to the
+/// user immediately after a successful recovery so they can voluntarily
+/// tip the project — no on-chain enforcement, fully opt-in.
+const PHOENIX_BTC_ADDRESS: &str = "bc1p0730rztrz3yw3fc0an28tuxft0cstfcfr7mu0umc4scl8z0kradqzprlpr";
+const PHOENIX_EVM_ADDRESS: &str = "0x7C17c4937cABD75CB8657f5fb1c4184325Bff652";
+const PHOENIX_SOL_ADDRESS: &str = "5De7kbLn9SSsKLVQCCMdcRyAvofeijD6VQPqc9CZXwyT";
+
+fn print_donation_prompt(kind: &AddressKindArg) {
+    let chain = match kind {
+        AddressKindArg::Btc => "Bitcoin (Taproot)",
+        AddressKindArg::Eth => "EVM (Ethereum + L2s + Base + Monad)",
+        AddressKindArg::Sol => "Solana",
+    };
+    let addr = match kind {
+        AddressKindArg::Btc => PHOENIX_BTC_ADDRESS,
+        AddressKindArg::Eth => PHOENIX_EVM_ADDRESS,
+        AddressKindArg::Sol => PHOENIX_SOL_ADDRESS,
+    };
+    println!();
+    println!("────────────────────────────────────────────────────────────────────────");
+    println!("  Phoenix is open source and free for the first 5 pilot recoveries.");
+    println!();
+    println!("  If this saved a wallet you thought was gone, a 5% voluntary tip");
+    println!("  funds the next user's free recovery and the upcoming security audit.");
+    println!();
+    println!("  Same chain as your recovery ({chain}):");
+    println!("    {addr}");
+    println!();
+    println!("  Cross-chain options (open source registry — verify in git history):");
+    println!("    BTC: {PHOENIX_BTC_ADDRESS}");
+    println!("    EVM: {PHOENIX_EVM_ADDRESS}");
+    println!("    SOL: {PHOENIX_SOL_ADDRESS}");
+    println!();
+    println!("  Tipping is fully voluntary. Phoenix never holds your keys; you sign.");
+    println!("  Verify these addresses against:");
+    println!("    https://github.com/enesakb/phoenix/blob/master/docs/wallets.md");
+    println!("────────────────────────────────────────────────────────────────────────");
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -117,6 +157,7 @@ async fn main() -> anyhow::Result<()> {
                     println!("  Path / index  : {}", r.address_index);
                     println!("  Mnemonic      : {}", r.recovered_mnemonic);
                     println!("  Elapsed       : {:.2?}", elapsed);
+                    print_donation_prompt(&kind);
                 }
                 Err(e) => {
                     eprintln!("✗ no match found ({:.2?}): {e}", elapsed);
