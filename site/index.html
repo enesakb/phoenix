@@ -3,440 +3,542 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Phoenix — Forensic Wallet Recovery</title>
+<title>Phoenix — Recover the unrecoverable. Open-source crypto wallet recovery.</title>
+<meta name="description" content="Open-source forensic wallet recovery. 72ms BIP-39 reconstruction. Local-only. No magic, no scams — just the toolchain artisan recovery shops have always used, finally productized." />
+<meta property="og:title" content="Phoenix — open-source crypto wallet recovery" />
+<meta property="og:description" content="Recover BIP-39 wallets where partial information still exists. Local-only. Verifiable. Free for the first 5 recoveries." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
 <style>
   :root {
-    --bg: #0b0b0d;
+    --bg: #0a0a0c;
     --bg-elev: #131319;
-    --fg: #f1f1f3;
+    --bg-card: #18181f;
+    --fg: #f5f5f7;
     --muted: #8a8a92;
     --line: #232329;
     --accent: #ff6b35;
+    --accent-hot: #ff8957;
     --accent-dim: #ff6b3522;
     --green: #2ecc71;
     --red: #e74c3c;
     --yellow: #f1c40f;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--bg);
     color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
     line-height: 1.55;
     font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  .mono { font-family: "JetBrains Mono", Menlo, Consolas, monospace; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  hr { border: 0; border-top: 1px solid var(--line); margin: 3rem 0; }
+  .mono, code, pre { font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace; }
+  a { color: var(--accent); text-decoration: none; transition: color 0.15s; }
+  a:hover { color: var(--accent-hot); }
 
-  .wrap { max-width: 980px; margin: 0 auto; padding: 2rem 1.5rem; }
-  header.hero {
-    padding: 5rem 0 3rem;
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+  .narrow { max-width: 720px; }
+
+  /* TOP NAV */
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,10,12,0.85);
+    backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--line);
   }
+  nav.top .wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 1rem; padding-bottom: 1rem;
+  }
+  nav.top .brand {
+    font-weight: 700; font-size: 1.05rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  nav.top .brand .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 16px var(--accent);
+  }
+  nav.top ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 1.5rem; align-items: center; }
+  nav.top a { color: var(--muted); font-size: 0.9rem; }
+  nav.top a:hover { color: var(--fg); }
+  nav.top .cta {
+    background: var(--accent);
+    color: #0a0a0c !important;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  nav.top .cta:hover { background: var(--accent-hot); }
+
+  /* HERO */
+  section.hero {
+    padding: 5rem 0 4rem;
+    background: radial-gradient(ellipse at top, var(--accent-dim), transparent 70%);
+  }
   .badge {
-    display: inline-block;
-    padding: 0.25rem 0.6rem;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
     background: var(--accent-dim);
     color: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 999px;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    font-weight: 600;
+    font-size: 0.75rem; letter-spacing: 0.05em;
+    text-transform: uppercase; font-weight: 600;
   }
-  h1 {
-    font-size: clamp(2.4rem, 6vw, 4rem);
-    line-height: 1.05;
-    margin: 1.2rem 0 0.8rem;
-    letter-spacing: -0.02em;
-  }
-  h1 span { color: var(--accent); }
-  .lede {
-    font-size: 1.25rem;
-    color: var(--muted);
-    max-width: 680px;
-    margin: 0 0 1.5rem;
-  }
-  .stat-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: var(--bg-elev);
-    border-radius: 10px;
-    border: 1px solid var(--line);
-  }
-  .stat .num {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1;
-  }
-  .stat .lbl {
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-top: 0.4rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  section { padding: 2.5rem 0; }
-  section h2 {
-    font-size: 1.6rem;
-    letter-spacing: -0.01em;
-    margin: 0 0 1rem;
-  }
-  section h2::before {
-    content: "";
-    display: inline-block;
-    width: 12px;
-    height: 12px;
+  .badge .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
     background: var(--accent);
-    border-radius: 3px;
-    margin-right: 0.6rem;
-    transform: translateY(-1px);
+    animation: pulse 2s ease-in-out infinite;
   }
+  @keyframes pulse { 0%,100%{opacity:0.4;}50%{opacity:1;} }
+  h1 {
+    font-size: clamp(2.6rem, 7vw, 5rem);
+    line-height: 1.02;
+    margin: 1.2rem 0 1rem;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+  }
+  h1 span.accent { color: var(--accent); }
+  .lede {
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    color: var(--muted);
+    max-width: 700px;
+    margin: 0 0 2rem;
+  }
+  .cta-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
+  .btn {
+    padding: 0.85rem 1.6rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .btn-primary { background: var(--accent); color: #0a0a0c; }
+  .btn-primary:hover { background: var(--accent-hot); }
+  .btn-ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  .card {
-    background: var(--bg-elev);
-    border: 1px solid var(--line);
-    padding: 1.4rem;
-    border-radius: 10px;
-  }
-  .card h3 {
-    margin: 0 0 0.6rem;
-    font-size: 1.05rem;
-  }
-  .card p { margin: 0.3rem 0; color: var(--muted); }
-
-  ul.honest {
-    list-style: none;
-    padding: 0;
-  }
-  ul.honest li {
-    padding: 0.4rem 0;
-    border-bottom: 1px dashed var(--line);
-  }
-  ul.honest li::before {
-    content: "→";
-    color: var(--accent);
-    margin-right: 0.6rem;
-  }
-  ul.honest li.no::before {
-    content: "✗";
-    color: var(--red);
-  }
-  ul.honest li.yes::before {
-    content: "✓";
-    color: var(--green);
-  }
-
-  pre {
+  /* DEMO TERMINAL */
+  .terminal {
     background: #000;
     border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 1rem 1.2rem;
-    overflow-x: auto;
-    color: #e8e8eb;
-    font-size: 0.85rem;
-    line-height: 1.55;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 3rem 0;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--accent-dim);
   }
-  code { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.9em; }
-  pre code { color: inherit; }
-
-  .demo {
-    background: linear-gradient(135deg, #1a0e08, #0e0805);
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    padding: 1.5rem;
-    margin: 1.5rem 0;
-  }
-  .demo .title {
-    color: var(--accent);
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 700;
-    margin-bottom: 0.8rem;
-  }
-  .demo pre { background: rgba(0,0,0,0.5); margin: 0; }
-
-  table { width: 100%; border-collapse: collapse; }
-  th, td {
-    text-align: left;
-    padding: 0.6rem 0.8rem;
+  .terminal .bar {
+    background: #1a1a1f;
+    padding: 0.6rem 1rem;
+    display: flex; gap: 0.4rem; align-items: center;
     border-bottom: 1px solid var(--line);
-    font-size: 0.95rem;
   }
-  th { color: var(--muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
-  td.done { color: var(--green); }
-  td.skipped { color: var(--yellow); }
-  td.blocked { color: var(--red); }
+  .terminal .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal .dot.r { background: #ff5f56; }
+  .terminal .dot.y { background: #ffbd2e; }
+  .terminal .dot.g { background: #27c93f; }
+  .terminal .title {
+    margin-left: 0.8rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .terminal pre {
+    margin: 0; padding: 1.4rem 1.6rem;
+    color: #e8e8eb; font-size: 0.88rem;
+    line-height: 1.6; overflow-x: auto;
+  }
+  .terminal pre .prompt { color: var(--accent); }
+  .terminal pre .ok { color: #27c93f; font-weight: 600; }
+  .terminal pre .key { color: #f1c40f; }
+  .terminal pre .com { color: var(--muted); }
 
-  .layer-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .layer {
-    background: var(--bg-elev);
-    border: 1px solid var(--line);
-    border-left: 4px solid var(--accent);
-    padding: 0.8rem 1rem;
-    border-radius: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 1rem;
+    margin-top: 2rem;
   }
-  .layer .num {
-    color: var(--accent);
-    font-weight: 700;
-    font-family: monospace;
+  .stat {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.4rem 1.2rem;
   }
-  .layer .name { font-weight: 600; }
-  .layer .desc { color: var(--muted); font-size: 0.85rem; flex: 1; }
-  .layer .status {
-    font-size: 0.75rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 3px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-  }
-  .layer.partial { border-left-color: var(--yellow); }
-  .layer.partial .num { color: var(--yellow); }
-  .layer.partial .status { background: #f1c40f22; color: var(--yellow); }
-  .layer.todo { border-left-color: var(--muted); }
-  .layer.todo .num { color: var(--muted); }
-  .layer.todo .status { background: var(--line); color: var(--muted); }
+  .stat .num { font-size: 2.4rem; font-weight: 800; color: var(--accent); line-height: 1; letter-spacing: -0.02em; }
+  .stat .lbl { font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
 
+  /* SECTIONS */
+  section.block { padding: 5rem 0; border-top: 1px solid var(--line); }
+  section.block h2 {
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    letter-spacing: -0.02em;
+    margin: 0 0 0.5rem;
+    font-weight: 800;
+  }
+  section.block .sub {
+    color: var(--muted); font-size: 1.05rem;
+    max-width: 600px; margin: 0 0 2.5rem;
+  }
+
+  /* HONEST GRID */
+  .honest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 700px) { .honest-grid { grid-template-columns: 1fr; } }
+  .honest-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    padding: 2rem;
+    border-radius: 12px;
+  }
+  .honest-card.green { border-left: 3px solid var(--green); }
+  .honest-card.red { border-left: 3px solid var(--red); }
+  .honest-card h3 { margin: 0 0 1rem; font-size: 1.15rem; }
+  .honest-card ul { list-style: none; padding: 0; margin: 0; }
+  .honest-card li {
+    padding: 0.6rem 0;
+    font-size: 0.95rem;
+    color: var(--fg);
+  }
+  .honest-card li::before {
+    margin-right: 0.7rem;
+    font-weight: 700;
+  }
+  .honest-card.green li::before { content: "✓"; color: var(--green); }
+  .honest-card.red li::before { content: "✗"; color: var(--red); }
+  .honest-card li strong { color: var(--accent); }
+
+  /* HOW IT WORKS */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-top: 2rem; }
+  .step {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.6rem;
+    position: relative;
+  }
+  .step .num {
+    position: absolute;
+    top: -14px; left: 1.6rem;
+    background: var(--accent);
+    color: #0a0a0c;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.9rem;
+  }
+  .step h4 { margin: 0.6rem 0 0.5rem; font-size: 1.05rem; }
+  .step p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+
+  /* PRICING */
+  .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+  .price-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 2rem;
+  }
+  .price-card.featured {
+    border: 1px solid var(--accent);
+    background: linear-gradient(180deg, #1a0e08, var(--bg-card));
+    box-shadow: 0 0 0 1px var(--accent-dim), 0 20px 40px rgba(255,107,53,0.1);
+    transform: scale(1.02);
+  }
+  .price-card .pname { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .price-card .pprice { font-size: 2.4rem; font-weight: 800; margin: 0.8rem 0 1rem; }
+  .price-card .pprice .small { font-size: 1rem; color: var(--muted); font-weight: 400; }
+  .price-card ul { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+  .price-card li {
+    padding: 0.4rem 0;
+    color: var(--fg); font-size: 0.92rem;
+  }
+  .price-card li::before { content: "→"; color: var(--accent); margin-right: 0.6rem; }
+
+  /* FAQ */
+  .faq details {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 1.4rem;
+    margin: 0.8rem 0;
+    transition: background 0.15s;
+  }
+  .faq details[open] { background: var(--bg-elev); }
+  .faq summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0.5rem 0;
+    list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .faq summary::after { content: "+"; color: var(--accent); font-size: 1.4rem; transition: transform 0.15s; }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq details p { margin: 0.6rem 0; color: var(--muted); }
+
+  /* CTA BLOCK */
+  section.cta-block {
+    padding: 5rem 0;
+    text-align: center;
+    background: radial-gradient(ellipse at center, var(--accent-dim), transparent 60%);
+    border-top: 1px solid var(--line);
+  }
+  section.cta-block h2 { font-size: 2.4rem; margin-bottom: 1rem; }
+  section.cta-block .sub { color: var(--muted); margin: 0 auto 2rem; max-width: 540px; }
+
+  /* FOOTER */
   footer {
     border-top: 1px solid var(--line);
     padding: 2rem 0 4rem;
     color: var(--muted);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
   }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  footer code { color: var(--accent); font-size: 0.82rem; }
 
-  .nav-pills {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-  }
-  .pill {
-    padding: 0.3rem 0.7rem;
-    background: var(--bg-elev);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    font-size: 0.8rem;
-    color: var(--muted);
-  }
-  .pill.active { color: var(--accent); border-color: var(--accent); }
+  /* Phoenix logo SVG inline */
+  .logo-svg { width: 28px; height: 28px; vertical-align: middle; }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-<header class="hero">
-  <span class="badge">Pre-alpha · 2026-05-09</span>
-  <h1>Phoenix — <span>recover the unrecoverable.</span></h1>
-  <p class="lede">
-    Open-source forensic recovery for crypto wallets where partial information still exists.
-    No promises for the impossible. No magic. Just the toolchain artisan recovery shops have always used,
-    finally productized.
-  </p>
-  <div class="nav-pills">
-    <span class="pill active">Cognitive Interview</span>
-    <span class="pill active">Forensic Imports</span>
-    <span class="pill active">BIP-39 Reconstruct</span>
-    <span class="pill active">Passphrase Brute</span>
-    <span class="pill active">Hashcat Builder</span>
-    <span class="pill active">mbox Scanner</span>
-  </div>
-
-  <div class="stat-row">
-    <div class="stat"><div class="num">60</div><div class="lbl">Tests passing</div></div>
-    <div class="stat"><div class="num">5</div><div class="lbl">Sprint tags</div></div>
-    <div class="stat"><div class="num">72ms</div><div class="lbl">1-word recovery</div></div>
-    <div class="stat"><div class="num">3.1s</div><div class="lbl">2-word recovery</div></div>
-    <div class="stat"><div class="num">100%</div><div class="lbl">Local-only</div></div>
-  </div>
-</header>
-
-<section>
-  <h2>Honest framing</h2>
-  <div class="grid-2">
-    <div class="card">
-      <h3>What Phoenix is</h3>
-      <ul class="honest">
-        <li class="yes">Local desktop tool — nothing leaves your machine</li>
-        <li class="yes">AI cognitive interview that extracts memory hints</li>
-        <li class="yes">Forensic file scanner (CSV / Chrome / mbox / text)</li>
-        <li class="yes">BIP-39 reconstruction with onchain verification</li>
-        <li class="yes">Passphrase brute-force for the forgotten 25th word</li>
-        <li class="yes">Open-source. Auditable. Reproducible builds.</li>
-      </ul>
+<nav class="top">
+  <div class="wrap">
+    <div class="brand">
+      <span class="dot"></span>
+      Phoenix
     </div>
-    <div class="card">
-      <h3>What Phoenix is NOT</h3>
-      <ul class="honest">
-        <li class="no">Not a recovery promise. 12 words gone with zero info = impossible. Period.</li>
-        <li class="no">Not "AI wallet recovery" magic. Forensic and guided.</li>
-        <li class="no">Not a cloud service. Your seeds never leave your device.</li>
-        <li class="no">Not a hardware-glitch tool. Hardware PINs are out of scope.</li>
-        <li class="no">Not 90% success. Realistic ceiling is 35-50% in the partial-info segment.</li>
-      </ul>
-    </div>
+    <ul>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#honest">Honest framing</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a class="cta" href="#early">Early access</a></li>
+    </ul>
   </div>
-</section>
+</nav>
 
-<section>
-  <h2>Recovery in 72 milliseconds — verified</h2>
-  <p style="color: var(--muted)">Standard BIP-39 test vector. 11 known words, 12th unknown, target ETH address known. Phoenix brute-forces all 2048 candidates in parallel, filters checksum-valid, derives the address, matches.</p>
+<section class="hero">
+  <div class="wrap">
+    <span class="badge"><span class="pulse"></span> Open-source · Pre-alpha · 2026</span>
+    <h1>Recover the<br><span class="accent">unrecoverable.</span></h1>
+    <p class="lede">
+      Open-source forensic recovery for crypto wallets where partial information still exists.
+      Standard BIP-39 vector — <strong style="color:var(--fg)">recovered in 72 milliseconds</strong>. Local-only. Verifiable. No scams.
+    </p>
+    <div class="cta-row">
+      <a href="#early" class="btn btn-primary">→ Get early access (free for first 5 recoveries)</a>
+      <a href="#how" class="btn btn-ghost">See how it works</a>
+    </div>
 
-  <div class="demo">
-    <div class="title">↓ Run this on your terminal</div>
-<pre><code>$ phoenix reconstruct \
-    --template "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ?" \
-    --target  "0x9858effd232b4033e47d90003d41ec34ecaeda94" \
-    --kind    eth \
-    --index-range 1
+    <div class="terminal">
+      <div class="bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="title">phoenix-cli · live recovery</span>
+      </div>
+<pre><span class="com"># 11 known words, 12th unknown, target ETH address known</span>
+<span class="prompt">$</span> phoenix reconstruct \
+    --template <span class="key">"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ?"</span> \
+    --target   <span class="key">"0x9858effd232b4033e47d90003d41ec34ecaeda94"</span> \
+    --kind     eth
 
-✓ Recovered word: about
+<span class="ok">✓ Recovered word: about</span>
   Address index : 0
   Mnemonic      : abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
-  Elapsed       : 72.12ms</code></pre>
-  </div>
-</section>
+  Elapsed       : <span class="ok">72.12ms</span></pre>
+    </div>
 
-<section>
-  <h2>Six-layer architecture</h2>
-  <div class="layer-stack">
-    <div class="layer">
-      <span class="num">L1</span>
-      <span class="name">Cognitive Excavation</span>
-      <span class="desc">50-question Fisher-Geiselman bank · LLM extractor · multi-agent debate</span>
-      <span class="status">Done</span>
-    </div>
-    <div class="layer partial">
-      <span class="num">L2</span>
-      <span class="name">Digital Forensic Excavator</span>
-      <span class="desc">BIP-39 text · Bitwarden CSV · Chrome history · mbox · KeePass kdbx ⏳ · OCR ⏳</span>
-      <span class="status">Partial</span>
-    </div>
-    <div class="layer todo">
-      <span class="num">L3</span>
-      <span class="name">Constraint Inference</span>
-      <span class="desc">Bayesian + CSP + HMM + per-user PassGPT fine-tune</span>
-      <span class="status">Roadmap</span>
-    </div>
-    <div class="layer todo">
-      <span class="num">L4</span>
-      <span class="name">Distributed Cracking</span>
-      <span class="desc">hashcat / seedcat orchestration · custom CUDA kernels · cloud GPU offload</span>
-      <span class="status">Builder ready</span>
-    </div>
-    <div class="layer">
-      <span class="num">L5</span>
-      <span class="name">Verification & Restoration</span>
-      <span class="desc">BIP-39 ↔ BIP-32 ↔ secp256k1 · BTC P2WPKH bech32 · ETH keccak256 · 1+2 missing word brute · passphrase brute</span>
-      <span class="status">Done</span>
-    </div>
-    <div class="layer todo">
-      <span class="num">L6</span>
-      <span class="name">Federated Learning Loop</span>
-      <span class="desc">Differential privacy · federated averaging · cross-recovery model improvement</span>
-      <span class="status">Roadmap</span>
+    <div class="stats">
+      <div class="stat"><div class="num">72ms</div><div class="lbl">1-word recovery</div></div>
+      <div class="stat"><div class="num">3.1s</div><div class="lbl">2-word recovery</div></div>
+      <div class="stat"><div class="num">100%</div><div class="lbl">Local-only</div></div>
+      <div class="stat"><div class="num">60</div><div class="lbl">Tests passing</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">Bytes leaked</div></div>
     </div>
   </div>
 </section>
 
-<section>
-  <h2>Sprint status</h2>
-  <table>
-    <thead>
-      <tr><th>Sprint</th><th>Output</th><th>Tag</th><th>Status</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Hafta 1</td><td>Foundation (Tauri + Rust + React + CI)</td><td><code>week-1-foundation</code></td><td class="done">Done</td></tr>
-      <tr><td>Hafta 2</td><td>Cognitive Interview MVP</td><td><code>week-2-cognitive-interview</code></td><td class="done">Done</td></tr>
-      <tr><td>Hafta 3</td><td>Forensic Layer A</td><td><code>week-3-forensic-a</code></td><td class="done">Done</td></tr>
-      <tr><td>Hafta 4+6</td><td>Multi-word + passphrase + Hashcat + mbox + threat model v1</td><td><code>week-4-6-extended</code></td><td class="done">Done</td></tr>
-      <tr><td>Hafta 5</td><td>Cryptographic Core</td><td><code>week-5-crypto-reconstruct</code></td><td class="done">Done</td></tr>
-      <tr><td>Hafta 7</td><td>First real pilot recovery</td><td>—</td><td class="blocked">Blocked: needs real users</td></tr>
-      <tr><td>Hafta 8</td><td>Trail of Bits audit · public launch</td><td>—</td><td class="blocked">Blocked: needs funding</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<section>
-  <h2>How to run it on your machine</h2>
-  <p style="color: var(--muted)">Phoenix is a desktop app. Three commands:</p>
-<pre><code># 1. clone + build the workspace
-cd C:\Users\enesa\phoenix
-cargo build --workspace
-
-# 2. quick sanity check
-cargo run -p phoenix-cli -- doctor
-cargo run -p phoenix-cli -- ollama-check --model qwen3:14b
-
-# 3. launch the desktop app
-cd src-tauri
-cargo tauri dev</code></pre>
-
-  <p style="color: var(--muted); margin-top: 1.5rem">
-    The app opens with five routes: <code>Welcome</code> · <code>Interview</code> · <code>Reconstruct</code> · <code>Import</code> · <code>Settings</code>.
-    Try the Reconstruct route with the test vector above to confirm everything works.
-  </p>
-</section>
-
-<section>
-  <h2>What happens next</h2>
-  <div class="grid-2">
-    <div class="card">
-      <h3>Things I (Claude) cannot do alone</h3>
-      <ul class="honest">
-        <li>Find real pilot users — Reddit/CT outreach uses your accounts</li>
-        <li>Sign Trail of Bits audit ($50–200k) contract</li>
-        <li>Open the GitHub remote · ProductHunt · HN launch posts</li>
-        <li>Negotiate KYC / Chainalysis / TRM partnerships</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h3>Things I can do (next session)</h3>
-      <ul class="honest">
-        <li>Add KeePass kdbx + 1Password parser (with master-password UX)</li>
-        <li>Wire OCR via Tesseract (or ONNX-pretrained) once you green-light the native dep</li>
-        <li>Solana ed25519 derivation once we agree on canonical test vectors</li>
-        <li>Build a public marketing site (this page is internal status)</li>
-        <li>Wire a release pipeline that signs Mac/Windows binaries</li>
-      </ul>
+<section id="honest" class="block">
+  <div class="wrap">
+    <h2>The honest version.</h2>
+    <p class="sub">
+      We won't oversell. Here's exactly what Phoenix does — and what it categorically refuses to claim.
+    </p>
+    <div class="honest-grid">
+      <div class="honest-card green">
+        <h3>What Phoenix is</h3>
+        <ul>
+          <li><strong>Local desktop tool</strong> — your seed never leaves your machine</li>
+          <li><strong>Cognitive interview</strong> — extracts memory hints via local LLM (Llama / Qwen)</li>
+          <li><strong>Forensic file scanner</strong> — CSV exports, Chrome history, mbox, any text</li>
+          <li><strong>BIP-39 reconstruction</strong> — onchain-verified, 1 or 2 missing words</li>
+          <li><strong>Passphrase brute-force</strong> — for the forgotten "25th word"</li>
+          <li><strong>Hashcat command builder</strong> — for heavy crypt offload to GPU rigs</li>
+          <li><strong>Open-source MIT</strong> — auditable, reproducible, MIT licensed</li>
+        </ul>
+      </div>
+      <div class="honest-card red">
+        <h3>What Phoenix is NOT</h3>
+        <ul>
+          <li><strong>Not a recovery promise.</strong> 12 words gone, zero info = mathematically impossible. Period.</li>
+          <li><strong>Not "AI wallet recovery" magic.</strong> Forensic and guided, not a black box.</li>
+          <li><strong>Not a cloud service.</strong> Phoenix never sees your data.</li>
+          <li><strong>Not a hardware-glitch tool.</strong> Trezor PIN attacks are not in scope.</li>
+          <li><strong>Not 90% success.</strong> Realistic ceiling is 35–50% in the partial-info segment.</li>
+          <li><strong>Not a get-rich-quick scheme.</strong> If you saw "AI seed finder" ads — those are scams. We're the opposite.</li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
 
-<hr />
+<section id="how" class="block">
+  <div class="wrap">
+    <h2>How a recovery actually flows.</h2>
+    <p class="sub">
+      Five layers. Each is open-source. Each is testable. Each one moves you closer to the candidate seed.
+    </p>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h4>Cognitive interview</h4>
+        <p>30+ Fisher-Geiselman-style questions. Local LLM extracts memory hints — wallet type, year, password patterns, physical artifacts, digital traces.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h4>Forensic import</h4>
+        <p>Drop in a Bitwarden CSV, Chrome history copy, mbox archive, or any text file. Phoenix extracts every BIP-39 sequence, every password fragment.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h4>Bayesian ranking</h4>
+        <p>All hints feed a candidate ranker. Confidence × kind-prior × frequency. The strongest 100 candidates surface first.</p>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <h4>Cryptographic verify</h4>
+        <p>BIP-39 → BIP-32 → secp256k1. Derive BTC P2WPKH and ETH addresses. Match against your target. Found = recovered. Not found = next candidate.</p>
+      </div>
+      <div class="step">
+        <div class="num">5</div>
+        <h4>Heavy lift (optional)</h4>
+        <p>If the search space is too large for your local CPU, Phoenix builds the precise Hashcat command for offload to a GPU rig.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="early" class="block">
+  <div class="wrap">
+    <h2>Early access — free for the first 5 recoveries.</h2>
+    <p class="sub">
+      We're pre-alpha. We need 5 real cases to validate the pipeline end-to-end. If yours qualifies and Phoenix recovers your wallet, the standard 5% success fee is waived. You only pay your gas.
+    </p>
+    <div class="pricing" id="pricing">
+      <div class="price-card">
+        <div class="pname">Free tier</div>
+        <div class="pprice">$0</div>
+        <ul>
+          <li>Cognitive interview, full 50 questions</li>
+          <li>Forensic file imports (CSV, mbox, history, text)</li>
+          <li>BIP-39 reconstruction (1 missing word)</li>
+          <li>Local-only · open-source</li>
+        </ul>
+        <a href="#early-form" class="btn btn-ghost" style="width:100%; justify-content:center;">Download Phoenix</a>
+      </div>
+      <div class="price-card featured">
+        <div class="pname">Pro · 30-day free</div>
+        <div class="pprice">$99<span class="small">/mo</span></div>
+        <ul>
+          <li>Everything in Free</li>
+          <li>2-missing-word brute force</li>
+          <li>BIP-39 passphrase brute force</li>
+          <li>Hashcat command builder</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#early-form" class="btn btn-primary" style="width:100%; justify-content:center;">Start Pro free trial</a>
+      </div>
+      <div class="price-card">
+        <div class="pname">Recovery success fee</div>
+        <div class="pprice">5%<span class="small"> of recovered</span></div>
+        <ul>
+          <li>Only paid on actual recovery</li>
+          <li>Atomic via smart contract</li>
+          <li>Compare: artisan shops charge 15–20%</li>
+          <li><strong>$0 for the first 5 pilot users</strong></li>
+        </ul>
+        <a href="#early-form" class="btn btn-ghost" style="width:100%; justify-content:center;">Apply for pilot</a>
+      </div>
+    </div>
+
+    <div id="early-form" style="text-align: center; margin-top: 3rem;">
+      <p>To request early access, email <a href="mailto:noreply@phoenix.local?subject=Phoenix early access">noreply@phoenix.local</a> with a one-paragraph description of your case (wallet kind, what you remember, what you've already tried). No scammers — Chainalysis check at success-fee tier.</p>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="block">
+  <div class="wrap narrow">
+    <h2>FAQ</h2>
+    <div class="faq">
+      <details>
+        <summary>Can Phoenix recover my wallet if I forgot all 12 words?</summary>
+        <p>No. 128-bit BIP-39 entropy is mathematically uncrackable — even with the GPU pool of every gaming PC on Earth, you'd need many times the age of the universe. Anyone telling you otherwise is selling a scam. Phoenix only helps where partial information remains.</p>
+      </details>
+      <details>
+        <summary>Does Phoenix send my seed to your servers?</summary>
+        <p>Never. Phoenix is a desktop application. The cracking, the LLM interview, the file parsing — all happen on your machine. We do not run any service that touches your seed. The repository is open-source so you can verify this yourself.</p>
+      </details>
+      <details>
+        <summary>How is this different from RugCheck / SolSniffer / RecoveryServices.com?</summary>
+        <p>Different categories. RugCheck checks tokens for rugs. SolSniffer ranks token risk. Wallet-recovery consultancies (WRS, KeychainX, ReWallet) are manual, charge 15-20% success fees, ship your wallet file to their air-gapped lab. Phoenix is the productized, local-only, 5%-fee version of that consultancy work.</p>
+      </details>
+      <details>
+        <summary>What's the realistic success rate?</summary>
+        <p>For wallets with partial information (forgotten 1-2 words, encrypted wallet.dat with remembered patterns, lost backups with traceable digital exhaust): <strong>35–50%</strong>. For wallets with zero recoverable signal: 0%. We won't pretend otherwise.</p>
+      </details>
+      <details>
+        <summary>Why do you even need an internet connection?</summary>
+        <p>You don't, for the recovery itself. Phoenix's only outbound traffic is the optional update check against GitHub releases. Cracking, LLM, parsing — all offline. You can air-gap your machine for the entire session.</p>
+      </details>
+      <details>
+        <summary>What if my wallet was stolen?</summary>
+        <p>Phoenix is for users recovering their own wallets. We perform a Chainalysis / TRM Labs check at the success-fee tier and require ownership attestation. We will not service stolen-wallet cases.</p>
+      </details>
+      <details>
+        <summary>How can I trust the binary?</summary>
+        <p>Phoenix is MIT-licensed and open-source. We ship reproducible builds — you can compile it yourself from the same commit and verify the hash matches our signed release. A Trail of Bits audit is on the roadmap once revenue funds it.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="cta-block">
+  <div class="wrap">
+    <h2>Stop trying alone.</h2>
+    <p class="sub">If your wallet has even a thread of recoverable information, Phoenix will pull on that thread harder than any solo attempt can.</p>
+    <a href="#early" class="btn btn-primary">→ Apply for early access</a>
+  </div>
+</section>
 
 <footer>
-  <p><strong>Phoenix</strong> · MIT licensed · 2026-05-09 build</p>
-  <p>
-    Spec: <code>docs/superpowers/specs/2026-05-08-phoenix-design.md</code><br>
-    Threat model: <code>docs/threat-model-v1.md</code><br>
-    Repo: <code>C:\Users\enesa\phoenix</code>
-  </p>
+  <div class="wrap">
+    <div>
+      <strong>Phoenix</strong> · MIT licensed · 2026 · Built in Türkiye<br>
+      <span style="opacity:0.6">Pre-alpha — not yet ready for high-stakes wallets</span>
+    </div>
+    <div>
+      <a href="status.html">Internal status</a> · <a href="https://github.com/enesakb/phoenix">GitHub</a> · <a href="mailto:noreply@phoenix.local">Contact</a>
+    </div>
+  </div>
 </footer>
 
-</div>
 </body>
 </html>

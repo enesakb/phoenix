@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phoenix — Forensic Wallet Recovery</title>
+<style>
+  :root {
+    --bg: #0b0b0d;
+    --bg-elev: #131319;
+    --fg: #f1f1f3;
+    --muted: #8a8a92;
+    --line: #232329;
+    --accent: #ff6b35;
+    --accent-dim: #ff6b3522;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --yellow: #f1c40f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.55;
+    font-size: 16px;
+  }
+  .mono { font-family: "JetBrains Mono", Menlo, Consolas, monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 3rem 0; }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header.hero {
+    padding: 5rem 0 3rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    line-height: 1.05;
+    margin: 1.2rem 0 0.8rem;
+    letter-spacing: -0.02em;
+  }
+  h1 span { color: var(--accent); }
+  .lede {
+    font-size: 1.25rem;
+    color: var(--muted);
+    max-width: 680px;
+    margin: 0 0 1.5rem;
+  }
+  .stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-elev);
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+  .stat .num {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat .lbl {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  section { padding: 2.5rem 0; }
+  section h2 {
+    font-size: 1.6rem;
+    letter-spacing: -0.01em;
+    margin: 0 0 1rem;
+  }
+  section h2::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 3px;
+    margin-right: 0.6rem;
+    transform: translateY(-1px);
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    padding: 1.4rem;
+    border-radius: 10px;
+  }
+  .card h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+  }
+  .card p { margin: 0.3rem 0; color: var(--muted); }
+
+  ul.honest {
+    list-style: none;
+    padding: 0;
+  }
+  ul.honest li {
+    padding: 0.4rem 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  ul.honest li::before {
+    content: "→";
+    color: var(--accent);
+    margin-right: 0.6rem;
+  }
+  ul.honest li.no::before {
+    content: "✗";
+    color: var(--red);
+  }
+  ul.honest li.yes::before {
+    content: "✓";
+    color: var(--green);
+  }
+
+  pre {
+    background: #000;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    color: #e8e8eb;
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  code { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.9em; }
+  pre code { color: inherit; }
+
+  .demo {
+    background: linear-gradient(135deg, #1a0e08, #0e0805);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .demo .title {
+    color: var(--accent);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+  }
+  .demo pre { background: rgba(0,0,0,0.5); margin: 0; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.95rem;
+  }
+  th { color: var(--muted); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  td.done { color: var(--green); }
+  td.skipped { color: var(--yellow); }
+  td.blocked { color: var(--red); }
+
+  .layer-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .layer {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+  .layer .num {
+    color: var(--accent);
+    font-weight: 700;
+    font-family: monospace;
+  }
+  .layer .name { font-weight: 600; }
+  .layer .desc { color: var(--muted); font-size: 0.85rem; flex: 1; }
+  .layer .status {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .layer.partial { border-left-color: var(--yellow); }
+  .layer.partial .num { color: var(--yellow); }
+  .layer.partial .status { background: #f1c40f22; color: var(--yellow); }
+  .layer.todo { border-left-color: var(--muted); }
+  .layer.todo .num { color: var(--muted); }
+  .layer.todo .status { background: var(--line); color: var(--muted); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 2rem 0 4rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .nav-pills {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .pill {
+    padding: 0.3rem 0.7rem;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .pill.active { color: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="badge">Pre-alpha · 2026-05-09</span>
+  <h1>Phoenix — <span>recover the unrecoverable.</span></h1>
+  <p class="lede">
+    Open-source forensic recovery for crypto wallets where partial information still exists.
+    No promises for the impossible. No magic. Just the toolchain artisan recovery shops have always used,
+    finally productized.
+  </p>
+  <div class="nav-pills">
+    <span class="pill active">Cognitive Interview</span>
+    <span class="pill active">Forensic Imports</span>
+    <span class="pill active">BIP-39 Reconstruct</span>
+    <span class="pill active">Passphrase Brute</span>
+    <span class="pill active">Hashcat Builder</span>
+    <span class="pill active">mbox Scanner</span>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="num">60</div><div class="lbl">Tests passing</div></div>
+    <div class="stat"><div class="num">5</div><div class="lbl">Sprint tags</div></div>
+    <div class="stat"><div class="num">72ms</div><div class="lbl">1-word recovery</div></div>
+    <div class="stat"><div class="num">3.1s</div><div class="lbl">2-word recovery</div></div>
+    <div class="stat"><div class="num">100%</div><div class="lbl">Local-only</div></div>
+  </div>
+</header>
+
+<section>
+  <h2>Honest framing</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>What Phoenix is</h3>
+      <ul class="honest">
+        <li class="yes">Local desktop tool — nothing leaves your machine</li>
+        <li class="yes">AI cognitive interview that extracts memory hints</li>
+        <li class="yes">Forensic file scanner (CSV / Chrome / mbox / text)</li>
+        <li class="yes">BIP-39 reconstruction with onchain verification</li>
+        <li class="yes">Passphrase brute-force for the forgotten 25th word</li>
+        <li class="yes">Open-source. Auditable. Reproducible builds.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What Phoenix is NOT</h3>
+      <ul class="honest">
+        <li class="no">Not a recovery promise. 12 words gone with zero info = impossible. Period.</li>
+        <li class="no">Not "AI wallet recovery" magic. Forensic and guided.</li>
+        <li class="no">Not a cloud service. Your seeds never leave your device.</li>
+        <li class="no">Not a hardware-glitch tool. Hardware PINs are out of scope.</li>
+        <li class="no">Not 90% success. Realistic ceiling is 35-50% in the partial-info segment.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Recovery in 72 milliseconds — verified</h2>
+  <p style="color: var(--muted)">Standard BIP-39 test vector. 11 known words, 12th unknown, target ETH address known. Phoenix brute-forces all 2048 candidates in parallel, filters checksum-valid, derives the address, matches.</p>
+
+  <div class="demo">
+    <div class="title">↓ Run this on your terminal</div>
+<pre><code>$ phoenix reconstruct \
+    --template "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ?" \
+    --target  "0x9858effd232b4033e47d90003d41ec34ecaeda94" \
+    --kind    eth \
+    --index-range 1
+
+✓ Recovered word: about
+  Address index : 0
+  Mnemonic      : abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
+  Elapsed       : 72.12ms</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>Six-layer architecture</h2>
+  <div class="layer-stack">
+    <div class="layer">
+      <span class="num">L1</span>
+      <span class="name">Cognitive Excavation</span>
+      <span class="desc">50-question Fisher-Geiselman bank · LLM extractor · multi-agent debate</span>
+      <span class="status">Done</span>
+    </div>
+    <div class="layer partial">
+      <span class="num">L2</span>
+      <span class="name">Digital Forensic Excavator</span>
+      <span class="desc">BIP-39 text · Bitwarden CSV · Chrome history · mbox · KeePass kdbx ⏳ · OCR ⏳</span>
+      <span class="status">Partial</span>
+    </div>
+    <div class="layer todo">
+      <span class="num">L3</span>
+      <span class="name">Constraint Inference</span>
+      <span class="desc">Bayesian + CSP + HMM + per-user PassGPT fine-tune</span>
+      <span class="status">Roadmap</span>
+    </div>
+    <div class="layer todo">
+      <span class="num">L4</span>
+      <span class="name">Distributed Cracking</span>
+      <span class="desc">hashcat / seedcat orchestration · custom CUDA kernels · cloud GPU offload</span>
+      <span class="status">Builder ready</span>
+    </div>
+    <div class="layer">
+      <span class="num">L5</span>
+      <span class="name">Verification & Restoration</span>
+      <span class="desc">BIP-39 ↔ BIP-32 ↔ secp256k1 · BTC P2WPKH bech32 · ETH keccak256 · 1+2 missing word brute · passphrase brute</span>
+      <span class="status">Done</span>
+    </div>
+    <div class="layer todo">
+      <span class="num">L6</span>
+      <span class="name">Federated Learning Loop</span>
+      <span class="desc">Differential privacy · federated averaging · cross-recovery model improvement</span>
+      <span class="status">Roadmap</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Sprint status</h2>
+  <table>
+    <thead>
+      <tr><th>Sprint</th><th>Output</th><th>Tag</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Hafta 1</td><td>Foundation (Tauri + Rust + React + CI)</td><td><code>week-1-foundation</code></td><td class="done">Done</td></tr>
+      <tr><td>Hafta 2</td><td>Cognitive Interview MVP</td><td><code>week-2-cognitive-interview</code></td><td class="done">Done</td></tr>
+      <tr><td>Hafta 3</td><td>Forensic Layer A</td><td><code>week-3-forensic-a</code></td><td class="done">Done</td></tr>
+      <tr><td>Hafta 4+6</td><td>Multi-word + passphrase + Hashcat + mbox + threat model v1</td><td><code>week-4-6-extended</code></td><td class="done">Done</td></tr>
+      <tr><td>Hafta 5</td><td>Cryptographic Core</td><td><code>week-5-crypto-reconstruct</code></td><td class="done">Done</td></tr>
+      <tr><td>Hafta 7</td><td>First real pilot recovery</td><td>—</td><td class="blocked">Blocked: needs real users</td></tr>
+      <tr><td>Hafta 8</td><td>Trail of Bits audit · public launch</td><td>—</td><td class="blocked">Blocked: needs funding</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>How to run it on your machine</h2>
+  <p style="color: var(--muted)">Phoenix is a desktop app. Three commands:</p>
+<pre><code># 1. clone + build the workspace
+cd C:\Users\enesa\phoenix
+cargo build --workspace
+
+# 2. quick sanity check
+cargo run -p phoenix-cli -- doctor
+cargo run -p phoenix-cli -- ollama-check --model qwen3:14b
+
+# 3. launch the desktop app
+cd src-tauri
+cargo tauri dev</code></pre>
+
+  <p style="color: var(--muted); margin-top: 1.5rem">
+    The app opens with five routes: <code>Welcome</code> · <code>Interview</code> · <code>Reconstruct</code> · <code>Import</code> · <code>Settings</code>.
+    Try the Reconstruct route with the test vector above to confirm everything works.
+  </p>
+</section>
+
+<section>
+  <h2>What happens next</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Things I (Claude) cannot do alone</h3>
+      <ul class="honest">
+        <li>Find real pilot users — Reddit/CT outreach uses your accounts</li>
+        <li>Sign Trail of Bits audit ($50–200k) contract</li>
+        <li>Open the GitHub remote · ProductHunt · HN launch posts</li>
+        <li>Negotiate KYC / Chainalysis / TRM partnerships</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Things I can do (next session)</h3>
+      <ul class="honest">
+        <li>Add KeePass kdbx + 1Password parser (with master-password UX)</li>
+        <li>Wire OCR via Tesseract (or ONNX-pretrained) once you green-light the native dep</li>
+        <li>Solana ed25519 derivation once we agree on canonical test vectors</li>
+        <li>Build a public marketing site (this page is internal status)</li>
+        <li>Wire a release pipeline that signs Mac/Windows binaries</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr />
+
+<footer>
+  <p><strong>Phoenix</strong> · MIT licensed · 2026-05-09 build</p>
+  <p>
+    Spec: <code>docs/superpowers/specs/2026-05-08-phoenix-design.md</code><br>
+    Threat model: <code>docs/threat-model-v1.md</code><br>
+    Repo: <code>C:\Users\enesa\phoenix</code>
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

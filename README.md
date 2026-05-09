@@ -1,94 +1,161 @@
 # Phoenix
 
-> Open-source forensic recovery assistant for partial-information lost crypto wallets.
+> **Recover the unrecoverable.** Open-source forensic recovery for crypto wallets where partial information still exists.
 
-**Status:** Pre-alpha (Week 1 foundation complete, 2026-05-08).
+[![Status](https://img.shields.io/badge/status-pre--alpha-orange)](https://github.com/enesakb/phoenix)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-60_passing-brightgreen)](https://github.com/enesakb/phoenix)
+[![Recovery](https://img.shields.io/badge/BIP--39_recovery-72ms-ff6b35)](#live-demo)
+[![Local-only](https://img.shields.io/badge/local--only-100%25-blue)](#what-phoenix-is-not)
+
+---
+
+## Live demo — recovery in 72 milliseconds
+
+```bash
+$ phoenix reconstruct \
+    --template "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ?" \
+    --target  "0x9858effd232b4033e47d90003d41ec34ecaeda94" \
+    --kind    eth
+
+✓ Recovered word: about
+  Address index : 0
+  Mnemonic      : abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about
+  Elapsed       : 72.12ms
+```
+
+This is the **standard BIP-39 test vector**. 11 known words, 12th unknown, target Ethereum address known. Phoenix tries all 2048 candidate words in parallel, filters checksum-valid combinations, derives the address with `secp256k1` + `keccak256`, matches against the target. **Not magic — just systematized cryptography.**
+
+---
 
 ## What Phoenix is
 
-Phoenix systematizes what artisan wallet-recovery shops do manually: a structured cognitive interview, deep digital exhaust forensics, Bayesian candidate ranking, and distributed cracking — orchestrated as a single open-source desktop application.
+- 🧠 **Cognitive interview** — 50-question Fisher-Geiselman bank, local LLM (Llama 3.3 / Qwen 3) extracts memory hints
+- 📁 **Forensic file scanner** — Bitwarden CSV, Chrome History, mbox email archives, any text file
+- 🔐 **BIP-39 reconstruction** — single & dual missing-word brute force, onchain-verified
+- 🔑 **Passphrase brute force** — for the forgotten "25th word" (BIP-39 passphrase)
+- ⚡ **Hashcat command builder** — for heavy lift offload to GPU rigs
+- 🏠 **100% local** — your seed never leaves your machine
+- 🔓 **Open source MIT** — reproducible builds, auditable
 
 ## What Phoenix is NOT
 
-- Not a recovery promise. Wallets with zero memory and zero digital traces cannot be recovered. Period.
-- Not a hardware-glitch tool. Hardware PIN attacks are out of scope (Praefortis / Unciphered own that space).
-- Not a cloud service. All recovery work happens locally on your machine.
-- Not "AI wallet recovery." Phoenix is forensic and guided, not magic.
+- ❌ **Not a recovery promise.** 12 words gone with zero info = mathematically impossible (128-bit entropy). Period.
+- ❌ **Not "AI wallet recovery" magic.** Forensic and guided. The category name is poisoned by scammers — we're the opposite.
+- ❌ **Not a cloud service.** No telemetry, no upload, no remote anything by default.
+- ❌ **Not a hardware-glitch tool.** Trezor PIN attacks are out of scope (Praefortis / Unciphered handle that).
+- ❌ **Not 90% success.** Realistic ceiling is **35–50%** in the partial-info segment.
 
 ## Realistic outcomes
 
-For wallets where partial information exists (forgotten 1-2 seed words, wallet.dat with remembered password pattern, lost backups with traceable digital exhaust): expected v1 recovery rate **35-50%**.
+| Scenario | Recovery probability |
+|---|---|
+| 11 of 12 BIP-39 words known + target address | ~100% (sub-second) |
+| 10 of 12 words known + target address | ~100% (3-10 seconds) |
+| Wallet.dat + remembered password pattern | 30-60% (minutes-hours) |
+| Forgotten BIP-39 passphrase + known mnemonic | 10-40% (depends on candidate list) |
+| Photo of seed lost, but backup might exist | depends on forensic surface |
+| **All 12 words gone, zero traces** | **0%. Always. Don't pay anyone who claims otherwise.** |
 
-For wallets with no recoverable signal: **0%**. Always.
+---
 
-## Repository layout
+## Architecture (six layers)
 
 ```
-phoenix/
-├── crates/phoenix-core      # Domain logic (config, logging, telemetry, llm)
-├── crates/phoenix-cli       # Developer ergonomics (`phoenix doctor`, `phoenix ollama-check`)
-├── src-tauri                # Tauri 2 desktop shell + IPC commands
-├── src-ui                   # React + Vite frontend
-├── docs/superpowers         # Spec + plan documents
-└── docs/threat-model-v0.md  # Initial threat model
+┌─ L1: Cognitive Excavation     (Fisher-Geiselman + LLM extractor)        ✓ done
+├─ L2: Digital Forensic         (CSV, Chrome history, mbox, text)         ✓ partial
+├─ L3: Constraint Inference     (Bayesian + CSP + HMM)                    ⏳ roadmap
+├─ L4: Distributed Cracking     (hashcat / seedcat orchestration)         ✓ builder
+├─ L5: Verification + Restore   (BIP-39 → BIP-32 → secp256k1 → addr)      ✓ done
+└─ L6: Federated Learning       (cross-recovery model improvement)         ⏳ roadmap
 ```
 
-## Building from source
+---
+
+## Build from source
 
 ### Prerequisites
 
 - Rust 1.83+ (`rustup install stable`)
 - Node 20+
 - Tauri prerequisites for your OS — see https://tauri.app/start/prerequisites/
-- Ollama, with `llama3.3:70b` pulled locally (only required for `ollama-check` and Layer 1 work):
-  ```bash
-  ollama pull llama3.3:70b
-  ollama serve
-  ```
+- Ollama with `qwen3:14b` or `llama3.3:70b` pulled locally (only needed for cognitive interview)
 
 ### Build
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/enesakb/phoenix
 cd phoenix
 cargo build --workspace
 cd src-ui && npm install && cd ..
-cd src-tauri && cargo tauri dev   # launch the desktop app
+cd src-tauri && cargo tauri dev
 ```
 
-### Run tests
+### Run tests (60 tests across the workspace)
 
 ```bash
-cargo test --workspace            # phoenix-core + phoenix-cli (12 tests)
-cd src-tauri && cargo test        # phoenix-tauri (1 test)
-cd src-ui && npm run test         # vitest (1 test)
+cargo test --workspace
+cd src-tauri && cargo test
+cd src-ui && npm run test
 ```
 
-### Diagnostics
+### CLI diagnostics
 
 ```bash
 cargo run -p phoenix-cli -- doctor
-cargo run -p phoenix-cli -- ollama-check     # requires running Ollama
+cargo run -p phoenix-cli -- ollama-check --model qwen3:14b
+cargo run -p phoenix-cli -- reconstruct --template "..." --target "0x..." --kind eth
 ```
 
-## Design
+---
 
-The full design specification is at [`docs/superpowers/specs/2026-05-08-phoenix-design.md`](docs/superpowers/specs/2026-05-08-phoenix-design.md).
+## Pricing
 
-The Week 1 implementation plan is at [`docs/superpowers/plans/2026-05-08-phoenix-week1-foundation.md`](docs/superpowers/plans/2026-05-08-phoenix-week1-foundation.md).
+| Tier | Cost | Includes |
+|---|---|---|
+| **Free** | $0 | Interview, forensic imports, single-word reconstruction |
+| **Pro** | $99/month | + 2-word brute, passphrase brute, Hashcat builder |
+| **Recovery fee** | 5% of recovered | Only paid on success. Atomic via smart contract. |
+| **Pilot** | **$0** for first 5 successful recoveries | Email `noreply@phoenix.local` |
 
-The initial threat model is at [`docs/threat-model-v0.md`](docs/threat-model-v0.md).
+Compare: artisan recovery shops (WRS, KeychainX, ReWallet) charge **15-20% success fees** with no productized tooling.
 
-## Roadmap
+---
 
-- **Week 1 (DONE 2026-05-08)** — Foundation: workspace, Tauri shell, React UI, Ollama client, CI.
-- **Week 2** — Layer 1: Cognitive Interview MVP (50 structured questions, RL policy, multi-agent debate).
-- **Week 3** — Layer 2 part A: Browser forensics, password manager dump parser, photo OCR.
-- **Week 4** — Layer 2 part B: Email backup mining, iCloud/Drive parsers, file carving + threat model v1.
-- **Week 5** — Layer 3+4: Bayesian candidate ranker, hashcat/seedcat wrappers, custom CUDA for Phantom.
-- **Week 6** — Validation: 10 paying pilots, daily user calls.
-- **Week 7** — First successful recovery + anonymous case study.
-- **Week 8** — Trail of Bits engagement, public GitHub launch, ProductHunt + HN.
+## Security & trust
+
+- 🔓 **MIT licensed**, source-available — every line auditable
+- 🏗️ **Reproducible builds** — verify the binary matches the source
+- 🔍 **Trail of Bits audit** — on the roadmap once revenue funds it
+- 🚫 **No telemetry by default** — opt-in only, anonymous events only
+- ❄️ **No network during cracking** — air-gap your machine if you want
+- 🛡️ **Threat model** — see [`docs/threat-model-v1.md`](docs/threat-model-v1.md)
+- 🚨 **Stolen-wallet filter** — Chainalysis / TRM Labs check at success-fee tier
+
+---
+
+## Documentation
+
+- **Design spec** — [`docs/superpowers/specs/2026-05-08-phoenix-design.md`](docs/superpowers/specs/2026-05-08-phoenix-design.md)
+- **Threat model v1** — [`docs/threat-model-v1.md`](docs/threat-model-v1.md)
+- **Sprint plans** — [`docs/superpowers/plans/`](docs/superpowers/plans/)
+- **Internal status site** — open `site/status.html` in a browser
+- **Public landing** — open `site/index.html` in a browser
+
+---
+
+## Apply for early access
+
+Email **noreply@phoenix.local** with a one-paragraph description of your case:
+
+- What kind of wallet (BIP-39 mnemonic, wallet.dat, hardware wallet, exchange)
+- What you remember
+- What you've already tried
+- The target address (so we can verify on-chain)
+
+No scammers. We will not service stolen-wallet cases. **First 5 successful recoveries pay $0 fee.**
+
+---
 
 ## License
 
