@@ -4,6 +4,7 @@ import { Settings } from "./routes/Settings";
 import { Interview } from "./routes/Interview";
 import { Candidates } from "./routes/Candidates";
 import { Import } from "./routes/Import";
+import { Reconstruct } from "./routes/Reconstruct";
 
 export function App() {
   return (
@@ -13,6 +14,8 @@ export function App() {
         {" · "}
         <Link to="/interview">Interview</Link>
         {" · "}
+        <Link to="/reconstruct">Reconstruct</Link>
+        {" · "}
         <Link to="/settings">Settings</Link>
       </nav>
       <Routes>
@@ -20,6 +23,7 @@ export function App() {
         <Route path="/interview" element={<Interview />} />
         <Route path="/import/:sessionId" element={<Import />} />
         <Route path="/candidates/:sessionId" element={<Candidates />} />
+        <Route path="/reconstruct" element={<Reconstruct />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
     </BrowserRouter>

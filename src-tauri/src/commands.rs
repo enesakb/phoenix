@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 use std::sync::Mutex;
 
+use phoenix_core::crypto::{
+    address::AddressKind, reconstruct::reconstruct_missing_word,
+};
 use phoenix_core::forensic::{
     Bip39TextExtractor, BitwardenCsvExtractor, ChromeHistoryExtractor, ExtractorRegistry,
 };
@@ -184,6 +187,47 @@ pub fn complete_interview(
 pub struct ImportResult {
     pub nodes_added: usize,
     pub total_candidates: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ReconstructRequest {
+    pub template: String,
+    pub target: String,
+    pub kind: String,
+    pub passphrase: String,
+    pub index_range: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ReconstructResponse {
+    pub recovered_word: String,
+    pub recovered_mnemonic: String,
+    pub address_index: u32,
+    pub elapsed_ms: u128,
+}
+
+#[tauri::command]
+pub fn reconstruct(req: ReconstructRequest) -> Result<ReconstructResponse, String> {
+    let kind = match req.kind.as_str() {
+        "eth" => AddressKind::Eth,
+        "btc" => AddressKind::BtcSegwit,
+        other => return Err(format!("unknown kind: {other}")),
+    };
+    let started = std::time::Instant::now();
+    let result = reconstruct_missing_word(
+        &req.template,
+        &req.target,
+        kind,
+        &req.passphrase,
+        req.index_range,
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(ReconstructResponse {
+        recovered_word: result.recovered_word,
+        recovered_mnemonic: result.recovered_mnemonic,
+        address_index: result.address_index,
+        elapsed_ms: started.elapsed().as_millis(),
+    })
 }
 
 #[tauri::command]

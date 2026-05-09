@@ -15,6 +15,7 @@ fn main() {
             commands::get_memory,
             commands::complete_interview,
             commands::import_file,
+            commands::reconstruct,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Phoenix");
