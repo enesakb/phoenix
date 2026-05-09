@@ -1,106 +1,105 @@
 # Phoenix — Forensic Wallet Recovery Platform
 
-**Sürüm:** 1.0
-**Tarih:** 2026-05-08
-**Sahip:** Phoenix Maintainer
-**Kod adı:** Phoenix (public adı pre-launch'ta workshop ile belirlenecek; "AI wallet recovery" branding'i kullanılmayacak)
+**Version:** 1.0
+**Date:** 2026-05-08
+**Codename:** Phoenix (public name to be decided pre-launch; "AI wallet recovery" branding is not used)
 
 ---
 
-## 1. Yönetici özeti
+## 1. Executive summary
 
-Phoenix, **kayıp crypto cüzdanlarının partial-info segmenti** için açık-kaynak, lokal çalışan, AI-destekli forensic recovery platformudur. Bugün artisan recovery dükkanlarının (WRS, KeychainX, ReWallet) manuel yaptığı işi sistemleştirir: yapılandırılmış cognitive interview + deep digital exhaust forensics + Bayesian aday sıralaması + distributed cracking, tek bir tüketici ürünü olarak.
+Phoenix is an open-source, locally executed, AI-augmented forensic recovery platform for the **partial-information segment** of lost crypto wallets. It systematizes what artisan recovery shops (WRS, KeychainX, ReWallet) do manually today: a structured cognitive interview, deep digital exhaust forensics, Bayesian candidate ranking, and distributed cracking — orchestrated as a single consumer product.
 
-**Mantıksal sınırlar açıkça çizilmiştir:**
-- Tam-bilgi-kayıp seed'ler **kurtarılmaz** (128-bit entropy, fizik limiti)
-- Hardware-glitch / firmware-fault attack **kapsam dışı** (Praefortis/Unciphered alanı)
-- "AI wallet recovery" buzzword'ü **kullanılmaz** (scam-genre association)
-- Hiçbir tohum/anahtar **kullanıcı makinesinden çıkmaz**
+**Bounded claims:**
+- Full-information-loss seeds are **not recoverable** (128-bit entropy, physical limit)
+- Hardware-glitch / firmware-fault attacks are **out of scope** (Praefortis / Unciphered territory)
+- The "AI wallet recovery" buzzword is **not used** (scam-genre association)
+- No seed or key **leaves the user's machine**
 
-**Hedef başarı oranı (target segment içinde):** %35-50 v1, %50-70 federated learning ile 12 ay sonra.
+**Target success rate (within target segment):** 35–50% in v1, 50–70% after 12 months of federated-learning improvements.
 
-**Çekirdek devrim iddiası:** Recovery industry'sinin ilk endüstrileşmesi. Bugün artisan = yarın ürün.
+**Core thesis:** First industrialization of the recovery industry. Today's artisan = tomorrow's product.
 
 ---
 
-## 2. Problem ve pazar
+## 2. Problem and market
 
-### 2.1 Sayılarla pazar
-- Toplam kayıp BTC: ~3.7M coin (Chainalysis 2024) ≈ **$200B+**
-- Pump.fun: 1.4M aktif cüzdan, sürekli yeni "kayıp dust position" akışı
-- Reddit r/Bitcoin / r/Ethereum / r/CryptoCurrency "lost wallet" thread'leri: günde 25-50 yeni post
-- Recovery market hacmi (artisan toplam): ~$50-100M yıllık tahmini, %20+ büyüme
+### 2.1 Market by the numbers
+- Total lost BTC: ~3.7M coins (Chainalysis 2024) ≈ **$200B+**
+- Pump.fun: 1.4M active wallets, continuous stream of new "lost dust positions"
+- Reddit r/Bitcoin / r/Ethereum / r/CryptoCurrency "lost wallet" threads: 25–50 new posts per day
+- Artisan recovery market: ~$50–100M annual estimate, +20% YoY growth
 
-### 2.2 Mevcut servisler ve eksiklikleri
+### 2.2 Existing services and their gaps
 
-| Servis | Model | Fee | Eksiklik |
+| Service | Model | Fee | Gap |
 |---|---|---|---|
-| Wallet Recovery Services (Dave Bitcoin, 2013) | Manuel danışmanlık | %20 | Saatlerce telefon, scale yok, AI yok |
-| Crypto Asset Recovery (Chris Brooks) | Manuel + YouTube viral | %20 | Aile şirketi, kapasite kısıtlı |
-| KeychainX (CH) | Manuel + glitch | %10-20 | Kurumsal odaklı, retail UX yok |
-| ReWallet (DE/CH) | Air-gapped HPC | %20 | Almanca-öncelikli, dil sınırlı |
-| Praefortis / Unciphered (US) | Hardware glitch | Vakaya özel | Pahalı, sadece donanım |
-| BTCRecover (open-source CLI) | DIY | Bedava | %95 kullanıcının kapasitesi dışında |
-| seedcat / WalletGen | DIY GPU brute | Bedava | CLI, Python gerekir |
+| Wallet Recovery Services (Dave Bitcoin, est. 2013) | Manual consultancy | 20% | Hours of phone calls, no scale, no AI |
+| Crypto Asset Recovery (Chris Brooks) | Manual + viral YouTube | 20% | Family-run, capacity-bound |
+| KeychainX (CH) | Manual + glitch | 10–20% | Enterprise-focused, no retail UX |
+| ReWallet (DE/CH) | Air-gapped HPC | 20% | German-first, language-constrained |
+| Praefortis / Unciphered (US) | Hardware glitch | Per-case | Expensive, hardware-only |
+| BTCRecover (open-source CLI) | DIY | Free | 95% of users lack the technical bar |
+| seedcat / WalletGen | DIY GPU brute | Free | CLI, Python required |
 
-**Eksik:** Artisan ile CLI arasında **ürünleştirilmiş orta** yok.
+**Missing middle:** between artisan and CLI, no productized layer exists.
 
-### 2.3 Niye 2026'da yapılabilir, eskiden yapılamazdı
+### 2.3 Why it is buildable in 2026 and was not before
 
-1. **LLM-tabanlı cognitive interview:** Opus 4.7 / Llama 4 seviyesi LLM'ler artık yapılandırılmış memory recovery interview'ü yapabiliyor — 2 yıl önce kapasite yoktu
-2. **Local LLM ekonomisi:** 32GB VRAM'de Llama 3.3 70B çalışıyor → kullanıcı verisi cloud'a çıkmadan yorumlanır
-3. **GPU commodity:** RTX 4090 saniyede 10⁹ BIP-39 deneme; kiralık cloud GPU saatlik $1.50
-4. **Tauri/Rust:** Desktop app güvenli ve hızlı paketleniyor
-5. **MPC olgunluğu:** Atomic success-fee threshold ECDSA ile production-ready
-
----
-
-## 3. Açık olarak yapmadıklarımız (non-goals)
-
-- Tam-bilgi-kayıp seed kurtarımı (matematiksel imkansız — 128-bit entropy)
-- Hardware-glitch / firmware-fault attacks (Praefortis/Unciphered alanı)
-- Çalıntı/phishing fonu geri alma (AssetReality, Aegis alanı)
-- Pre-protection (multi-sig, social recovery wallet) — Argent/Safe/Daimo alanı
-- Quantum decryption (Q-Day gelirse zaten protokol post-quantum'a geçer)
-- Custodian dormant account recovery (Coinbase/Binance kendi süreci)
-- "Guaranteed recovery" ya da "%90 success rate" iddiaları (scam dilinde olur)
+1. **LLM-driven cognitive interview** — Opus 4.7 / Llama 4 class models can now run a structured memory-recovery interview reliably; this was not feasible two years ago
+2. **Local LLM economics** — Llama 3.3 70B runs in 32 GB VRAM, so user data never has to leave the machine
+3. **GPU is commodity** — RTX 4090 does ~10⁹ BIP-39 attempts/second; rented cloud GPU is ~$1.50/hour
+4. **Tauri / Rust** — desktop app packaging is now both safe and fast
+5. **MPC maturity** — atomic success-fee threshold ECDSA is production-ready
 
 ---
 
-## 4. Hedef kullanıcı segmenti
+## 3. Non-goals (what Phoenix explicitly does not do)
 
-### 4.1 Çözülebilirlik haritası
+- Recover seeds when no information is left (mathematically impossible — 128-bit entropy)
+- Hardware-glitch / firmware-fault attacks (Praefortis / Unciphered domain)
+- Recover stolen / phishing-drained funds (AssetReality, Aegis domain)
+- Pre-protection (multi-sig, social-recovery wallet) — Argent / Safe / Daimo domain
+- Quantum decryption (when Q-Day arrives, the protocol will already be post-quantum)
+- Custodian dormant-account recovery (handled by Coinbase / Binance directly)
+- Make claims like "guaranteed recovery" or "90% success rate" — that is the scam dialect
 
-| Vaka | Yaygınlık | Çözülebilirlik | Phoenix v1? |
+---
+
+## 4. Target user segment
+
+### 4.1 Tractability map
+
+| Case | Frequency | Tractability | Phoenix v1? |
 |---|---|---|---|
-| **A.** 11/12 kelime hatırlanıyor | Yüksek | 🟢 dakikalar | ✅ |
-| **B.** Tüm kelimeler ama sıra/yazım yanlış | Çok yüksek | 🟢 saatler | ✅ |
-| **C.** Şifreli wallet.dat + parola pattern'i hatırlanıyor | Yüksek | 🟡 günler | ✅ |
-| **D.** Eski cihaz/yedek var ama erişim yok | Orta | 🟡 forensic + cracking | ✅ |
-| **E.** Seed fotoğraflanmış, fotoğraf silinmiş | Orta | 🟡 thumbnail recovery + OCR | ✅ |
-| **F.** Hardware wallet PIN forgotten (Trezor) | Düşük-yüksek değer | 🟡 glitch attack | ❌ (kapsam dışı) |
-| **G.** 12 kelime tamamen kayıp, sıfır iz | Orta | 🔴 imkansız | ❌ |
+| **A.** 11/12 words remembered | High | 🟢 minutes | ✅ |
+| **B.** All words remembered, wrong order or typo | Very high | 🟢 hours | ✅ |
+| **C.** Encrypted wallet.dat + remembered password pattern | High | 🟡 days | ✅ |
+| **D.** Old device or backup exists, no access | Medium | 🟡 forensic + cracking | ✅ |
+| **E.** Seed photographed, photo deleted | Medium | 🟡 thumbnail recovery + OCR | ✅ |
+| **F.** Hardware-wallet PIN forgotten (Trezor) | Low frequency, high value | 🟡 glitch attack | ❌ (out of scope) |
+| **G.** All 12 words gone, zero traces | Medium | 🔴 impossible | ❌ |
 
-**Phoenix v1 segment:** A + B + C + D + E. Tahmini hacim: kayıp cüzdanların **%50-60'ı**.
+**Phoenix v1 segment:** A + B + C + D + E. Estimated coverage: **50–60% of all lost-wallet cases**.
 
-### 4.2 Persona
+### 4.2 Personas
 
-**Birincil — "Frustrated Self-Custodian":**
-- 30-50 yaş, teknik okuryazarlık var ama CLI seviyesinde değil
-- 2017-2021 arası BTC/ETH almış, cüzdan oluşturmuş
-- Şimdi $5k-$500k arası fonu unutulmuş cüzdanda
-- BTCRecover deneyip vazgeçmiş veya WRS fiyatından çekinmiş
-- Reddit/Twitter'da "lost my crypto" thread'i atmış
+**Primary — "Frustrated Self-Custodian":**
+- 30–50 years old, technically literate but not a CLI user
+- Bought BTC/ETH between 2017–2021, set up a wallet
+- Now $5k–$500k stuck in a forgotten wallet
+- Tried BTCRecover and gave up, or balked at WRS pricing
+- Has posted "I lost my crypto" on Reddit / Twitter
 
-**İkincil — "Heir / Inheritor":**
-- Yakını ölmüş, şifre/seed bırakmadan
-- Bilgisayar, telefon, kâğıtlar miras kalmış
-- Hukuki süreç tamamlanmış, ownership doğrulanabilir
-- Phoenix bu cihazlardan iz çıkarması için ideal
+**Secondary — "Heir / Inheritor":**
+- A relative passed away without leaving the seed/password
+- Computers, phones, papers inherited
+- Legal succession completed, ownership verifiable
+- Phoenix is ideal for forensic extraction across the inherited devices
 
 ---
 
-## 5. Sistem mimarisi — 6 katman
+## 5. System architecture — six layers
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -117,13 +116,13 @@ Phoenix, **kayıp crypto cüzdanlarının partial-info segmenti** için açık-k
              │
 ┌────────────▼─────────────────────────────────────────────┐
 │  Layer 2: Digital Forensic Excavator                     │
-│  - File carving (Foremost/Scalpel algorithms)            │
+│  - File carving (Foremost / Scalpel algorithms)          │
 │  - OCR + VLM (Tesseract + Llama Vision)                  │
-│  - Browser forensics (Chrome/Firefox)                    │
+│  - Browser forensics (Chrome / Firefox)                  │
 │  - Password manager dump parsing                         │
-│  - Email backup mining                                    │
+│  - Email backup mining                                   │
 │  - Photo EXIF + perceptual hashing                       │
-│  - iCloud/Drive backup parsing (with permission)         │
+│  - iCloud / Drive backup parsing (with permission)       │
 └────────────┬─────────────────────────────────────────────┘
              │
 ┌────────────▼─────────────────────────────────────────────┐
@@ -143,7 +142,7 @@ Phoenix, **kayıp crypto cüzdanlarının partial-info segmenti** için açık-k
 │  - Custom CUDA kernels (Phantom/Solflare/Backpack)       │
 │  - Bloom filter cache (skip tested candidates)           │
 │  - Multi-tier dispatcher (local → optional cloud)        │
-│  - Asenkron iş kuyruğu, resume-from-checkpoint           │
+│  - Async work queue, resume-from-checkpoint              │
 └────────────┬─────────────────────────────────────────────┘
              │
 ┌────────────▼─────────────────────────────────────────────┐
@@ -163,95 +162,95 @@ Phoenix, **kayıp crypto cüzdanlarının partial-info segmenti** için açık-k
 └──────────────────────────────────────────────────────────┘
 ```
 
-### 5.1 Layer detayları
+### 5.1 Layer details
 
 #### Layer 1: Cognitive Excavation Engine
-**Amaç:** Kullanıcının zihninden mümkün olan en zengin ipucu setini çıkarmak.
+**Purpose:** Extract the richest possible set of hints from the user's memory.
 
-**Akış:**
-1. Onboarding: cüzdan tipi, oluşturma dönemi, cihaz
-2. Yapılandırılmış görüşme (30-90 dk):
-   - Free recall (Fisher-Geiselman)
-   - Context reinstatement (cüzdanı oluşturduğunda nerede, hangi ruh halinde)
-   - Reverse order recall
-   - Change perspective recall
-3. RL policy en yüksek bilgi-getirisi sorularını seçer (Bayesian Optimal Experimental Design — Lindley 1956)
-4. Multi-agent debate: 3 LLM ajan kullanıcının cevaplarını cross-question eder, çelişki tespit eder
+**Flow:**
+1. Onboarding: wallet kind, creation period, device
+2. Structured interview (30–90 minutes):
+   - Free recall (Fisher–Geiselman)
+   - Context reinstatement (where the wallet was created, what mood)
+   - Reverse-order recall
+   - Change-perspective recall
+3. RL policy picks highest-expected-information questions (Bayesian Optimal Experimental Design — Lindley 1956)
+4. Multi-agent debate: three LLM agents cross-question the user's answers, surface contradictions
 
-**Çıktı:** Hatırlanan-pattern dizisi + her pattern için güven skoru
+**Output:** ranked memory-hint list with per-hint confidence scores.
 
 #### Layer 2: Digital Forensic Excavator
-**Amaç:** Kullanıcının lokal makinesinden ve onayladığı yedeklerden seed/parola adaylarını çıkarmak.
+**Purpose:** Extract seed/passphrase candidates from the user's local machine and any approved backups.
 
-**Modüller:**
-- **File carving:** Foremost/Scalpel byte-pattern matching ile silinmiş dosyalardan seed/wallet recovery
-- **OCR:** Tesseract + Llama Vision ile el yazılı seed fotoğraflarını tarama
-- **Browser:** Chrome/Firefox cache + history + autofill (BrowsingHistoryView, Hindsight)
-- **Password managers:** KeePass/LastPass/1Password export parsing
-- **Email:** Gmail Takeout / iCloud Mail / IMAP backup'larında seed-pattern arama (embedding search)
-- **Photos:** EXIF + perceptual hash ile silinmiş seed fotoğraflarının thumbnail'larını bulma
-- **Backups:** iCloud / Google Drive / Dropbox lokal indir + parse (kullanıcı onayıyla)
+**Modules:**
+- **File carving:** Foremost / Scalpel byte-pattern matching for deleted seed/wallet recovery
+- **OCR:** Tesseract + Llama Vision for handwritten seed photos
+- **Browser:** Chrome / Firefox cache + history + autofill (BrowsingHistoryView, Hindsight)
+- **Password managers:** KeePass / LastPass / 1Password export parsing
+- **Email:** Gmail Takeout / iCloud Mail / IMAP backups (embedding search for seed-shaped strings)
+- **Photos:** EXIF + perceptual hash for deleted seed-photo thumbnails
+- **Backups:** iCloud / Google Drive / Dropbox local download + parse (with explicit user consent)
 
-**Çıktı:** Aday seed parçaları, parola fragmentleri, tarihsel kullanım pattern'leri
+**Output:** candidate seed fragments, password fragments, historical usage patterns.
 
 #### Layer 3: Constraint Propagation & Inference
-**Amaç:** Layer 1 + Layer 2 çıktılarını birleştirip sıralı aday listesi üretmek.
+**Purpose:** Combine Layer 1 + Layer 2 outputs into a ranked candidate list.
 
-**Algoritmalar:**
-- CSP (AIMA Bölüm 6) — arc consistency, AC-3, conflict-directed backjumping
-- Bayesian Network (Pearl 1988) — kanıt parçaları → aday olasılıkları
-- HMM — kullanıcının pattern üretim alışkanlığını model'leme
-- MCMC — düşük olasılıklı ama mümkün adayları sample'lama
-- Damerau-Levenshtein — yazım hatası tahmini
-- PassGPT-style transformer (Rando 2023) — kullanıcının kişisel pattern'inde fine-tune
+**Algorithms:**
+- CSP (AIMA Chapter 6) — arc consistency, AC-3, conflict-directed backjumping
+- Bayesian Networks (Pearl 1988) — fragments of evidence → candidate probabilities
+- HMM — model the user's pattern-generation habits
+- MCMC — sample low-probability but possible candidates
+- Damerau-Levenshtein — typo prediction
+- PassGPT-style transformer (Rando 2023) — per-user fine-tune on the user's pattern history
 
-**Çıktı:** Priority queue olarak sıralı aday listesi
+**Output:** priority queue of ranked candidates.
 
 #### Layer 4: Distributed Cracking Engine
-**Amaç:** Adayları gerçekten test etmek.
+**Purpose:** Actually test the candidates.
 
-**Bileşenler:**
+**Components:**
 - hashcat wrapper (modes 11300/12700/15700/18800)
 - seedcat (BIP-39 GPU brute)
-- Custom CUDA kernels: Phantom, Solflare, Backpack lokal storage formatları
-- Bloom filter cache: önceden test edilmiş adayları skip
+- Custom CUDA kernels: Phantom / Solflare / Backpack local storage formats
+- Bloom-filter cache: skip already-tested candidates
 - Multi-tier dispatcher:
-  - Yüksek-olasılık adaylar → kullanıcının lokal GPU'sunda
-  - Düşük-olasılık adaylar → kullanıcının onayıyla kiralık cloud GPU
-- Async iş kuyruğu, fail-over, resume-from-checkpoint
+  - High-probability candidates → user's local GPU
+  - Low-probability candidates → user-approved cloud GPU
+- Async work queue, fail-over, resume-from-checkpoint
 
-**Çıktı:** Çalışan seed/parola
+**Output:** the working seed/password.
 
 #### Layer 5: Verification & Wallet Restoration
-**Amaç:** Cüzdan açıldığında güvenli teslim ve atomic fee.
+**Purpose:** When the wallet opens, deliver atomically and securely.
 
-**Mekanizmalar:**
-- MPC threshold ECDSA (Gennaro-Goldfeder 2018) — split-key reveal, Phoenix anahtarı asla görmez
-- TEE attestation — cracking node attest eder ki output sızdırılmadı
-- Smart contract escrow:
-  - Free / Pro tier: hizmet bedeli sub'tan, recovery bedava
-  - Success-fee tier: %5, atomik (escrow + reveal aynı transaction'da)
-- Onchain proof-of-recovery log → marketing case study'leri için (anonim)
+**Mechanisms:**
+- MPC threshold ECDSA (Gennaro-Goldfeder 2018) — split-key reveal; Phoenix never sees the key
+- TEE attestation — cracking node attests output was not leaked
+- Smart-contract escrow:
+  - Free / Pro tier: paid out of subscription, recovery is free
+  - Success-fee tier: 5% atomic (escrow + reveal in the same transaction)
+- Onchain proof-of-recovery log → for anonymized marketing case studies
 
 #### Layer 6: Federated Learning Loop (moat)
-**Amaç:** Her başarılı recovery'den ders çıkarmak, model'i her hafta zekleştirmek.
+**Purpose:** Learn from every successful recovery; improve the model weekly.
 
-**Mekanizmalar:**
-- Differential Privacy (Dwork 2006) — kullanıcı verisi sızmadan öğrenme
+**Mechanisms:**
+- Differential Privacy (Dwork 2006) — learn without leaking user data
 - Federated Averaging (McMahan et al. 2017)
 - Secure Aggregation (Bonawitz et al. 2017)
-- Anonim telemetri: hangi cognitive interview pattern'leri başarıya götürdü?
+- Anonymous telemetry: which interview patterns led to successful recovery?
 
-**Niye moat:** Recovery shop'ları veriyi paylaşmaz. Phoenix'in interview policy'si her hafta zekleşir, rakipler sıfırdan başlar. Compounding moat.
+**Why it's a moat:** Recovery shops do not share data. Phoenix's interview policy improves week-over-week; competitors restart from zero. Compounding moat.
 
 ---
 
-## 6. Algoritma & literatür kataloğu
+## 6. Algorithm and literature reference
 
-| Alan | Referans |
+| Area | Reference |
 |---|---|
 | Cognitive interview | Fisher & Geiselman 1992 |
-| Bayesian deneysel tasarım | Lindley 1956, Chaloner 1995 |
+| Bayesian experimental design | Lindley 1956, Chaloner 1995 |
 | CSP & search | Russell & Norvig (AIMA, 4th ed.) |
 | Bayesian networks | Pearl 1988, Koller & Friedman 2009 |
 | MCMC | Metropolis 1953, Hastings 1970 |
@@ -268,86 +267,85 @@ Phoenix, **kayıp crypto cüzdanlarının partial-info segmenti** için açık-k
 
 ---
 
-## 7. Trust & integrity modeli
+## 7. Trust & integrity model
 
-### 7.1 Lokal-only çalışma kanıtı
-- Tüm core algorithm'lar Tauri sandbox içinde
-- Network isolation: cracking sırasında dışarı sadece imzalı update server + opsiyonel cloud GPU'ya istek (kullanıcı onayıyla)
-- Wireshark-grade audit log → kullanıcı her byte'ı görebilir
-- Open-source: GitHub'da public, deterministic / reproducible builds
+### 7.1 Local-only execution proof
+- All core algorithms run inside the Tauri sandbox
+- Network isolation: during cracking the only outbound traffic is the signed update server + optional cloud GPU (with explicit user consent)
+- Wireshark-grade audit log → user can review every byte
+- Open-source: public GitHub, deterministic / reproducible builds
 
-### 7.2 Güven mekanizmaları (rollout)
-- **Day 1:** Kod public, README + threat model
-- **Day 30:** Trail of Bits engagement açıldı
+### 7.2 Trust mechanisms (rollout)
+- **Day 1:** Code public, README + threat model
+- **Day 30:** Trail of Bits engagement opened
 - **Day 60:** Sigstore + Cosign signed binaries
 - **Day 90:** Apple notarization + Microsoft signed
-- **Day 120:** Independent reviewer program (top 10 crypto YouTubers free copy + audit erişimi)
-- **Day 180:** Trail of Bits audit raporu yayınlandı
+- **Day 120:** Independent reviewer program (top 10 crypto YouTubers get free copies + audit access)
+- **Day 180:** Trail of Bits audit report published
 
-### 7.3 Çalıntı cüzdan filtresi
-- Recovery başlamadan önce target adres → Chainalysis Reactor + TRM Labs API check
-- Çalıntı / sanction'lı flag varsa hizmet **vermiyoruz** (clear UX message)
+### 7.3 Stolen-wallet filter
+- Before recovery starts, target address → Chainalysis Reactor + TRM Labs API check
+- If flagged stolen / sanctioned, Phoenix declines service (clear UX message)
 - Ownership attestation: KYC doc + creation-date proof + 2 secondary references (success-fee tier)
 
 ### 7.4 Anti-scam-genre marketing
-- Reklam dilinde "AI" yok
-- Hiçbir success rate >%70 iddiası yok
-- "Guaranteed" kelimesi marketing'de geçmez
-- Independent reviewer linkleri her sayfada
+- Marketing copy avoids "AI"
+- No success-rate claim above 70%
+- The word "guaranteed" never appears
+- Independent reviewer links on every page
 
 ---
 
 ## 8. Legal & compliance
 
-### 8.1 Yargı yetkileri
-- Birincil registration: İsviçre veya Estonya (low-friction crypto-recovery legal framework)
-- ABD ops: Money Transmitter License gerek değil (custody yok)
-- AB: GDPR-uyumlu, sadece lokal data processing
+### 8.1 Jurisdictions
+- Primary registration: Switzerland or Estonia (low-friction crypto-recovery legal framework)
+- US ops: no Money Transmitter License needed (no custody)
+- EU: GDPR-compliant, local-only data processing
 
-### 8.2 AML/KYC
-- Free tier: KYC yok, lokal araç olarak kullanılır
-- Pro tier ($99/ay): KYC opsiyonel
-- Success-fee tier: KYC zorunlu + ownership attestation
-- $5K+ recovered transaction'lar: OFAC sanction list check
+### 8.2 AML / KYC
+- Free tier: no KYC, used as a local tool
+- Pro tier ($99/mo): optional KYC
+- Success-fee tier: KYC required + ownership attestation
+- $5K+ recovered transactions: OFAC sanction-list check
 
 ### 8.3 Disclaimers
 - "Phoenix is a tool, not a service. Outcomes depend on user-provided information."
 - "We do not guarantee recovery."
-- "By using, you attest you are the rightful owner of the wallet under recovery."
+- "By using Phoenix, you attest you are the rightful owner of the wallet under recovery."
 
 ---
 
-## 9. Para modeli
+## 9. Pricing
 
-| Tier | Pricing | Hedef |
+| Tier | Pricing | Target |
 |---|---|---|
-| **Free** | İlk 1M brute attempt + 30 dk LLM interview | Tire-kicker'lar, validation |
-| **Pro** | $99/ay unlimited brute + extended interview + cloud GPU offload | Aktif kurtarma deneyenler |
-| **Recovery Success Fee** | %5 (smart contract atomic) | Başarılı vakalar |
-| **Enterprise API** | $5k-$50k/yıl | Custodian/exchange dormant account programı |
-| **Premium Human Consult** | $500/saat | Karmaşık vakalar, opsiyonel |
+| **Free** | First 1M brute attempts + 30-min LLM interview | Tire-kickers, validation |
+| **Pro** | $99/mo unlimited brute + extended interview + cloud GPU offload | Active recoverers |
+| **Recovery success fee** | 5% (atomic via smart contract) | Successful cases |
+| **Enterprise API** | $5k–$50k/year | Custodian / exchange dormant-account programs |
+| **Premium human consult** | $500/hr | Complex cases, optional |
 
-### 9.1 Revenue projeksiyonu
-- **Yıl 1:** 10 başarılı recovery × $50k ortalama = $25k success fee + $50k Pro sub = $75k
-- **Yıl 2:** 100 recovery × $30k = $150k success + $300k Pro = $450k
-- **Yıl 3:** 500 recovery × $25k = $625k success + $1M Pro + ilk Enterprise = $2M+
-- **Yıl 4-5:** $5-15M ARR ufku
+### 9.1 Revenue projection
+- **Year 1:** 10 successful recoveries × $50k average = $25k success fee + $50k Pro sub = $75k
+- **Year 2:** 100 recoveries × $30k = $150k success + $300k Pro = $450k
+- **Year 3:** 500 recoveries × $25k = $625k success + $1M Pro + first Enterprise = $2M+
+- **Year 4-5:** $5–15M ARR horizon
 
 ---
 
 ## 10. Naming & positioning
 
 ### 10.1 Naming
-- Kod adı (internal): **Phoenix**
-- Public ad pre-launch'ta belirlenecek; kriterler:
-  - "AI" yok
-  - Forensic / archaeology imgesi
-  - .com/.io domain available
+- Internal codename: **Phoenix**
+- Public name to be decided pre-launch with the following criteria:
+  - No "AI"
+  - Forensic / archaeology imagery
+  - .com / .io domain available
   - Trademark clean
-  - Crypto'da kullanılmamış
+  - Not used elsewhere in crypto
 
-**Aday isimler (workshop'ta daraltılacak):**
-- Lazarus, Excavate, Vault Hunter, Echo, Crypt, Phoenix, Reclaim, Foundling, Resurgo
+**Candidate names (workshop):** Lazarus, Excavate, Vault Hunter, Echo, Crypt, Phoenix, Reclaim, Foundling, Resurgo
 
 ### 10.2 Positioning
 - ❌ "AI wallet recovery" (scam genre)
@@ -355,184 +353,181 @@ Phoenix, **kayıp crypto cüzdanlarının partial-info segmenti** için açık-k
 - ✅ "BTCRecover with a brain"
 - ✅ "The world's first systematized recovery platform"
 
-### 10.3 Marketing kanalları
-- Reddit lost-wallet thread'lerine **hizmet** (ücretsiz değerli yorum, hard-sell yok)
-- YouTube case study'leri (Joe Grand modelinin sistematik versiyonu)
-- Crypto Twitter (BTCRecover, Bankr, Polymarket post-mortem'leri)
+### 10.3 Marketing channels
+- Reddit lost-wallet threads — **service** them (provide value, no hard sell)
+- YouTube case studies (Joe Grand model, but systematic)
+- Crypto Twitter (BTCRecover, Bankr, Polymarket post-mortems)
 - SEO: "I lost my wallet" long-tail
 - Open-source community (HN, ProductHunt launch)
-- Türkiye + DACH bölgesi cold-outreach (mevcut outreach altyapı)
 
 ---
 
-## 11. Rekabet farklılaşma matrisi
+## 11. Competitive differentiation matrix
 
 | Capability | WRS | KeychainX | BTCRecover | Phoenix |
 |---|---|---|---|---|
 | Productized | ❌ | ❌ | Partial | ✅ |
 | AI cognitive interview | ❌ | ❌ | ❌ | ✅ |
 | Digital exhaust parser | Partial (manual) | Partial | ❌ | ✅ |
-| Local-only | ❌ (kullanıcı dosya gönderir) | ❌ | ✅ | ✅ |
+| Local-only | ❌ (user ships file) | ❌ | ✅ | ✅ |
 | Open-source | ❌ | ❌ | ✅ | ✅ |
 | Federated learning | ❌ | ❌ | ❌ | ✅ |
 | Atomic success fee | ❌ | ❌ | N/A | ✅ |
-| GUI | ❌ | ❌ | ⚠️ (kötü) | ✅ |
-| Türkçe / multilingual | ❌ | ❌ | ❌ | ✅ (planda) |
+| GUI | ❌ | ❌ | ⚠️ (poor) | ✅ |
+| Multilingual | ❌ | ❌ | ❌ | ✅ (planned) |
 
 ---
 
-## 12. 8 hafta MVP scope
+## 12. 8-week MVP scope
 
-### Hafta 1 — Foundation
-- Tauri + React + Rust workspace setup
+### Week 1 — Foundation
+- Tauri + React + Rust workspace
 - Llama 3.3 70B integration via Ollama
 - Logging + telemetry framework (opt-in only)
 - CI/CD baseline (GitHub Actions, signed builds)
 
-### Hafta 2 — Cognitive Interview MVP
-- Initial 50 yapılandırılmış interview sorusu (manuel-tuned)
+### Week 2 — Cognitive Interview MVP
+- 50 structured interview questions (manually tuned)
 - LLM-as-interviewer with policy module
 - User memory state representation (graph + embeddings)
-- Çıktı: ranked candidate text list
+- Output: ranked candidate text list
 
-### Hafta 3 — Forensic Layer A
+### Week 3 — Forensic Layer A
 - Browser forensics (Chrome / Firefox cache + history + autofill)
 - Password manager dump parser (KeePass, 1Password export)
-- İlk photo OCR (Tesseract baseline)
+- First photo OCR (Tesseract baseline)
 
-### Hafta 4 — Forensic Layer B
+### Week 4 — Forensic Layer B
 - Email backup mining (Gmail Takeout, IMAP)
-- iCloud / Google Drive backup lokal indir + parse
+- iCloud / Google Drive local download + parse
 - File carving (Foremost binding)
 
-### Hafta 5 — Inference + Cracking
+### Week 5 — Inference + Cracking
 - Bayesian candidate ranker
 - hashcat + seedcat wrapper
-- İlk custom CUDA kernel (Phantom)
+- First custom CUDA kernel (Phantom)
 
-### Hafta 6 — Validation Push
-- Manual outreach: BTCRecover forum, r/Bitcoin lost-wallet thread'leri, KeychainX'ten reject olanlar
-- Hedef: 10 ödeyen pilot ($99 Pro tier)
+### Week 6 — Validation push
+- Manual outreach: BTCRecover forum, r/Bitcoin lost-wallet threads, KeychainX rejects
+- Goal: 10 paying pilots ($99 Pro tier)
 - Daily user calls
 
-### Hafta 7 — First Recovery
-- Pilot feedback'e göre refine
-- Hedef: 1 gerçek successful recovery
-- Anonim case study draft
+### Week 7 — First recovery
+- Refine based on pilot feedback
+- Goal: 1 real successful recovery
+- Anonymized case study draft
 
-### Hafta 8 — Launch Prep
-- Trail of Bits engagement açma
+### Week 8 — Launch prep
+- Trail of Bits engagement opened
 - GitHub public open
 - ProductHunt + HN draft
-- Marketing site (Bölüm 10 positioning)
+- Marketing site (Section 10 positioning)
 
 ---
 
-## 13. Başarı kriterleri & validation gates
+## 13. Success criteria & validation gates
 
-### 13.1 v1 GATE (Hafta 8 sonu)
+### 13.1 v1 GATE (end of Week 8)
 
-**Devam:**
-- ≥1 gerçek recovery (kullanıcı doğrulanmış, anonim case study yayında)
-- ≥10 ödeyen pilot ($99 Pro)
-- Trail of Bits engagement açıldı
+**Continue:**
+- ≥1 real recovery (user-verified, anonymized case study published)
+- ≥10 paying pilots ($99 Pro)
+- Trail of Bits engagement opened
 - NPS >40 from pilot users
 
-**Kill (hiçbiri yoksa):**
-- 0 recovery
-- ≤3 ödeyen pilot
-- Audit firma reddetti veya engage olmadı
+**Kill (if none of the above):**
+- 0 recoveries
+- ≤3 paying pilots
+- Audit firm declined or did not engage
 
-### 13.2 v2 GATE (Yıl 1 sonu)
-- ≥10 başarılı recovery
+### 13.2 v2 GATE (end of Year 1)
+- ≥10 successful recoveries
 - $200k revenue
-- Federated learning loop aktif
-- Open-source community ≥500 GitHub star
+- Federated learning loop active
+- Open-source community ≥500 GitHub stars
 
-### 13.3 v3 GATE (Yıl 2 sonu)
-- ≥100 başarılı recovery
+### 13.3 v3 GATE (end of Year 2)
+- ≥100 successful recoveries
 - $1M revenue
-- İlk Enterprise müşteri (Coinbase/Binance/Kraken/Crypto.com dormant program'ı)
+- First enterprise customer (Coinbase / Binance / Kraken / Crypto.com dormant program)
 
 ---
 
-## 14. Açık riskler ve sorular
+## 14. Open risks & questions
 
-### 14.1 Yüksek-etki riskler
+### 14.1 High-impact risks
 
-1. **Naming category zehiri:** "AI wallet recovery" Google sonuçları scam dolu; open-source + audit yetmeyebilir. Mitigasyon: "AI" kelimesi marketing'de YOK; sadece "forensic" / "guided." Independent reviewer'lar gün 1'den.
-2. **AML legal exposure:** Kullanıcı Phoenix ile çalıntı cüzdana erişirse legal sorumluluk. Mitigasyon: Chainalysis/TRM check + ownership attestation + KYC at success-fee tier.
-3. **Apple/Google app store red'i:** Mitigasyon: desktop-only başlangıç, web fallback, mobile için sadece interview+report (cracking desktop'ta).
-4. **Federated learning privacy attack:** Mitigasyon: differential privacy + secure aggregation + threat model audit.
+1. **Naming-category poison** — "AI wallet recovery" Google results are scam-dominated; open-source + audit may not be enough. Mitigation: marketing copy never uses "AI"; only "forensic" / "guided." Independent reviewers from Day 1.
+2. **AML legal exposure** — if a user accesses a stolen wallet via Phoenix, legal liability. Mitigation: Chainalysis / TRM check + ownership attestation + KYC at success-fee tier.
+3. **Apple / Google app store rejection** — mitigation: desktop-only initially, web fallback, mobile only handles interview + report (cracking stays on desktop).
+4. **Federated-learning privacy attack** — mitigation: differential privacy + secure aggregation + threat-model audit.
 
-### 14.2 Orta-etki riskler
+### 14.2 Medium-impact risks
 
-5. Hashcat/seedcat upstream breaking change → CI matrix testler, version pinning
-6. LLM hallucination cognitive interview'da → multi-agent debate ile cross-check, human-in-loop
-7. iCloud/Google Drive API değişiklikleri → fallback parsers, format detection
+5. Hashcat / seedcat upstream breakage → CI matrix tests, version pinning
+6. LLM hallucination during cognitive interview → multi-agent debate cross-check, human-in-loop
+7. iCloud / Google Drive API changes → fallback parsers, format detection
 
-### 14.3 Açık sorular (resolve edilmeli)
+### 14.3 Open questions (to be resolved)
 
-- v1 yargı yetkisi: İsviçre mi Estonya mı? **Aksiyon: hukuki danışman ile 30 dakikalık call (hafta 1)**
-- Naming workshop kim yapacak? Branding agency $5k-15k vs. DIY
-- İlk 10 pilot user'ı nasıl bulacağız? Outreach playbook detayı
-- Trail of Bits engagement maliyeti: $50k-$200k tahmini, finansman planı
-- Ollama vs. llama.cpp vs. MLX (Apple Silicon) performans karşılaştırması
+- v1 jurisdiction: Switzerland or Estonia? **Action: 30-min legal counsel call (Week 1)**
+- Naming workshop: branding agency $5–15k vs DIY?
+- How to recruit the first 10 pilot users? Outreach playbook detail
+- Trail of Bits engagement cost: $50–200k expected; financing plan?
+- Ollama vs llama.cpp vs MLX (Apple Silicon) performance comparison
 
 ---
 
-## 15. v1 sonrası yol haritası
+## 15. Roadmap beyond v1
 
-### Yıl 1 Q3-Q4
-- Mobile app (iOS/Android) — sadece interview + report (cracking desktop'ta)
-- Hardware wallet seed extraction (software-only, Praefortis ile rekabet etmiyor)
-- Multilingual interview (Türkçe, Almanca, İspanyolca, Mandarin)
+### Year 1 Q3-Q4
+- Mobile app (iOS / Android) — interview + report only (cracking stays on desktop)
+- Hardware-wallet seed extraction (software-only; not competing with Praefortis)
+- Multilingual interview (Turkish, German, Spanish, Mandarin)
 
-### Yıl 2
-- Enterprise SaaS: borsa / custodian dormant account API
+### Year 2
+- Enterprise SaaS: exchange / custodian dormant-account API
 - Heir / inheritance specific UX (estate executor partnership)
-- Insurance partnership: pre-protection sigorta + recovery rider
+- Insurance partnership: pre-protection insurance + recovery rider
 
-### Yıl 3
+### Year 3
 - Phoenix Foundation (open-source governance)
 - Recovery network: federated GPU compute pool
-- Token (opsiyonel) — Pro tier holder'lar premium tier erişim
+- Token (optional) — Pro tier holders get premium access
 
 ---
 
-## EK A: Tasarım kararları & gerekçeleri
+## Appendix A: Design decisions & rationale
 
-| Karar | Niye |
+| Decision | Rationale |
 |---|---|
-| Tauri vs Electron | Bundle boyutu, performans, Rust güvenlik |
-| Llama 3.3 vs GPT-5 API | Lokal-only ilkesi, kullanıcı verisi cloud'a çıkmaz |
-| hashcat wrapper vs custom | Decade-tested, regression riski düşük |
-| MPC threshold ECDSA vs trust | Phoenix anahtarı asla görmez = güven moat |
-| Open-source MIT vs proprietary | Scam-genre'den ayrışmak için zorunlu |
-| %5 success fee vs %15 artisan | Düşük fee + ürün scale = daha yüksek mutlak gelir |
-| Federated learning vs central | Privacy + moat (rakipler sıfırdan başlar) |
+| Tauri vs Electron | Bundle size, performance, Rust safety |
+| Llama 3.3 vs GPT-5 API | Local-only principle; user data does not leave the machine |
+| hashcat wrapper vs custom | Decade-tested, low regression risk |
+| MPC threshold ECDSA vs trust | Phoenix never sees the key = trust moat |
+| Open-source MIT vs proprietary | Mandatory to differentiate from the scam genre |
+| 5% success fee vs 15% artisan | Lower fee × productized scale = higher absolute revenue |
+| Federated learning vs centralized | Privacy + moat (competitors restart from zero) |
 
 ---
 
-## EK B: Threat model (ana hatlar)
+## Appendix B: Threat model (outline)
 
-### Adversary modelleri
-1. **Pasif gözlemci:** Network trafiğini izler. Mitigasyon: lokal-only çalışma, network isolation.
-2. **Malicious cloud GPU:** Kiralık cloud'da seed sızdırma. Mitigasyon: TEE attestation, sadece encrypted candidate testing.
-3. **Çalıntı cüzdan kullanıcısı:** Phoenix'i çalıntı cüzdan açmak için kullanır. Mitigasyon: Chainalysis check + KYC + attestation.
-4. **Phoenix ekibi malicious:** Backdoor inject. Mitigasyon: open-source + reproducible builds + community audit.
-5. **Federated learning poisoning:** Adversary fake telemetry ile model'i bozmaya çalışır. Mitigasyon: secure aggregation + outlier detection.
+### Adversary models
+1. **Passive observer:** monitors network traffic. Mitigation: local-only execution, network isolation.
+2. **Malicious cloud GPU:** seed exfiltration on rented cloud. Mitigation: TEE attestation, only encrypted candidate testing.
+3. **Stolen-wallet user:** uses Phoenix to open a wallet they don't own. Mitigation: Chainalysis check + KYC + attestation.
+4. **Malicious Phoenix maintainer:** backdoor injection. Mitigation: open-source + reproducible builds + community audit.
+5. **Federated learning poisoning:** adversary feeds fake telemetry to corrupt the model. Mitigation: secure aggregation + outlier detection.
 
-### Detaylı threat model: hafta 4'te security review öncesi yazılacak.
-
----
-
-## EK C: İlk 10 pilot outreach playbook (hafta 6 öncesi yazılacak)
+Detailed threat model: written in Week 4 before security-architecture review.
 
 ---
 
-## Spec sonu
+## Appendix C: First 10 pilot outreach playbook (to be drafted before Week 6)
 
-Bu spec, brainstorming skill'i kapsamında **Phoenix v1 design dokümanı** olarak commit edilmiştir. İmplementation plan ayrı bir dokümanda ele alınacak (writing-plans skill).
+---
 
-**Onay durumu:** Sahip (Enes) tarafından 2026-05-08'de toplu onay verildi.
+## End of spec
+
+This document is committed as the **Phoenix v1 design specification** under the brainstorming skill. The implementation plan is maintained in a separate document under the writing-plans skill.
