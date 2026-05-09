@@ -94,6 +94,29 @@ fn reconstructs_missing_word_via_solana_solflare_path() {
     assert_eq!(result.address_index, 1, "Solflare is index 1 in ALL_PATHS");
 }
 
+/// Locked vectors — exact addresses produced by the canonical 'abandon × 11
+/// about' BIP-39 zero vector. Cross-verified against an independent Node.js
+/// pipeline using the libraries Phantom itself ships with:
+///   - bip39 (Node.js)
+///   - ed25519-hd-key
+///   - tweetnacl
+///   - bs58
+/// All three derivation paths produced byte-identical addresses across the
+/// two implementations on 2026-05-09. If this test ever fails, someone has
+/// changed the derivation in a way that diverges from the wider Solana
+/// ecosystem — investigate before merging.
+#[test]
+fn locked_vectors_match_phantom_libs() {
+    let seed = mnemonic_to_seed(TEST_MNEMONIC, "").unwrap();
+    let phantom = solana_address(&derive_solana_signing_key(&seed, PHANTOM_PATH));
+    let solflare = solana_address(&derive_solana_signing_key(&seed, SOLFLARE_PATH));
+    let sollet = solana_address(&derive_solana_signing_key(&seed, SOLLET_PATH));
+
+    assert_eq!(phantom, "HAgk14JpMQLgt6rVgv7cBQFJWFto5Dqxi472uT3DKpqk");
+    assert_eq!(solflare, "GjJyeC1r2RgkuoCWMyPYkCWSGSGLcz266EaAkLA27AhL");
+    assert_eq!(sollet, "DaYoLHpp7RRyAqn1HBPZYZpsKVEAmCDWemW18GABpT5");
+}
+
 #[test]
 fn solana_reconstruct_returns_no_match_for_unknown_address() {
     let template =

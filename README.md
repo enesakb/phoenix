@@ -48,6 +48,7 @@ Phoenix iterates all 2048 BIP-39 candidates in parallel, filters checksum-valid 
 | **Cognitive interview** | 50-question Fisher–Geiselman bank, local LLM (Llama 3.3 / Qwen 3) extracts memory hints |
 | **Forensic file scanner** | Bitwarden CSV, Chrome History, mbox archives, any plain text |
 | **BIP-39 reconstruction** | Single & dual missing-word brute force, on-chain verified |
+| **Multi-chain support** | BTC native segwit, Ethereum, **Solana** (Phantom + Solflare + Sollet paths), all cryptographically cross-verified against reference implementations |
 | **Passphrase brute force** | For the forgotten "25th word" (BIP-39 passphrase) |
 | **Hashcat command builder** | Generates exact CLI for offload to GPU rigs (no subprocess execution) |
 | **Local-only execution** | Your seed never leaves your machine. Verifiable via tcpdump. |
