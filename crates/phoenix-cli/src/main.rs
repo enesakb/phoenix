@@ -67,6 +67,15 @@ enum Command {
         #[arg(long, default_value = "")]
         passphrase: String,
     },
+    /// Print every BIP-39 word that starts with the given prefix. Useful
+    /// when you remember "the first three letters" of a missing seed word
+    /// and want to narrow the candidate list before running `reconstruct`.
+    FindWord {
+        /// Prefix to match (1–4 letters; BIP-39 words are unique by the
+        /// first 4 letters, so longer prefixes are pointless).
+        #[arg(long)]
+        prefix: String,
+    },
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -163,6 +172,39 @@ async fn main() -> anyhow::Result<()> {
                     eprintln!("✗ no match found ({:.2?}): {e}", elapsed);
                     std::process::exit(1);
                 }
+            }
+        }
+        Command::FindWord { prefix } => {
+            let prefix = prefix.to_lowercase();
+            let words = phoenix_core::forensic::bip39_wordlist();
+            let matches: Vec<&str> = words
+                .iter()
+                .copied()
+                .filter(|w| w.starts_with(&prefix))
+                .collect();
+            if matches.is_empty() {
+                eprintln!("✗ No BIP-39 word starts with \"{prefix}\". Check your spelling.");
+                std::process::exit(1);
+            }
+            println!(
+                "✓ {} BIP-39 word(s) start with \"{}\":",
+                matches.len(),
+                prefix
+            );
+            for w in &matches {
+                println!("    {w}");
+            }
+            if matches.len() == 1 {
+                println!();
+                println!("Only one match — that's almost certainly your missing word.");
+                println!("Plug it into your template directly, or just leave '?' and");
+                println!("let `phoenix reconstruct` confirm in milliseconds.");
+            } else {
+                println!();
+                println!("Multiple matches — use '?' in your template and let");
+                println!("`phoenix reconstruct` filter to the one that matches your");
+                println!("target address. It will iterate all 2048 words anyway");
+                println!("(sub-second), so the prefix is just for human triage.");
             }
         }
         Command::WalletCreate { passphrase } => {
